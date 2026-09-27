@@ -1,0 +1,19 @@
+Additional permission under GNU GPL version 3, section 7
+
+As a special exception, the copyright holders of this program (listed in
+AUTHORS) give you permission to distribute this program, or any work based on
+it, through Apple's App Store, TestFlight, or any other application
+distribution service whose terms of service impose usage restrictions on end
+users, even where those terms would otherwise conflict with the GNU General
+Public License. All other terms of the GPL continue to apply, including the
+obligation to make the Corresponding Source available.
+
+This additional permission applies **only** to code whose copyright holders
+have granted it, i.e. the original code of this repository. It does **not**
+apply to third-party components licensed under the GPL without such an
+exception (for example mkxp-z or EasyRPG Player, if integrated). Those
+components are governed solely by their own licenses.
+
+If you modify this program, you may extend this exception to your version,
+but you are not obligated to do so. If you do not wish to, delete this
+exception statement from your version.

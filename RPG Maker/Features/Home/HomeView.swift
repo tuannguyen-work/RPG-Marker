@@ -15,6 +15,7 @@ struct HomeView: View {
     @State private var gamePendingDeletion: GameProject?
     @State private var playingGame: GameProject?
     @State private var unsupportedGame: GameProject?
+    @State private var isSettingsPresented = false
 
     private let columns = [GridItem(.adaptive(minimum: 150), spacing: 14)]
 
@@ -36,10 +37,20 @@ struct HomeView: View {
         .background { AppBackground(style: .sky) }
         .navigationTitle("Library")
         .toolbar {
-            Button("Import Game", systemImage: "plus") {
-                isFilePickerPresented = true
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Settings", systemImage: "gearshape") {
+                    isSettingsPresented = true
+                }
             }
-            .disabled(viewModel.importState != nil)
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Import Game", systemImage: "plus") {
+                    isFilePickerPresented = true
+                }
+                .disabled(viewModel.importState != nil)
+            }
+        }
+        .sheet(isPresented: $isSettingsPresented) {
+            SettingsView()
         }
         .fileImporter(isPresented: $isFilePickerPresented, allowedContentTypes: Self.importableTypes) { result in
             guard case .success(let url) = result else { return }
@@ -91,6 +102,7 @@ struct HomeView: View {
             #if DEBUG
             // Launch with `-autoplay` (first playable game) or `-autoplay <part of a name>`.
             let arguments = ProcessInfo.processInfo.arguments
+            isSettingsPresented = arguments.contains("-showSettings")
             if let index = arguments.firstIndex(of: "-autoplay") {
                 let name = arguments.indices.contains(index + 1) ? arguments[index + 1] : ""
                 playingGame = viewModel.projects.first {

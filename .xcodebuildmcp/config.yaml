@@ -1,0 +1,9 @@
+# MobileBuildMCP (XcodeBuildMCP) settings for AI agents working on this repo.
+# https://github.com/getsentry/XcodeBuildMCP
+schemaVersion: 1
+enabledWorkflows: ["simulator", "ui-automation", "debugging"]
+sessionDefaults:
+  projectPath: "./RPG Maker.xcodeproj"
+  scheme: "RPG Maker"
+  simulatorName: "iPhone 17 Pro"
+sentryDisabled: true

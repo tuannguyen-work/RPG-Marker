@@ -2,7 +2,9 @@
 
 Every third-party component that is compiled into or shipped with the app must
 be listed here **before** it is merged, with its license and the obligation it
-creates. The in-app "Acknowledgements" screen is generated from this list.
+creates. Also add it to the in-app Settings › Acknowledgements screen
+(`Acknowledgement.all` in `Features/Settings/SettingsView.swift`) with its
+license text in `Resources/Licenses/`.
 
 | Component | Version | License | Used for | Obligations |
 |---|---|---|---|---|
