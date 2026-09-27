@@ -10,9 +10,11 @@ import UniformTypeIdentifiers
 
 struct HomeView: View {
     @State var viewModel: HomeViewModel
-    @Environment(AppRouter.self) private var router
+    @Environment(AppDependencies.self) private var dependencies
     @State private var isFilePickerPresented = false
     @State private var gamePendingDeletion: GameProject?
+    @State private var playingGame: GameProject?
+    @State private var unsupportedGame: GameProject?
 
     private let columns = [GridItem(.adaptive(minimum: 150), spacing: 14)]
 
@@ -61,7 +63,41 @@ struct HomeView: View {
         } message: { _ in
             Text("The game files are removed from this device. You can import it again later.")
         }
-        .task { await viewModel.load() }
+        .alert(
+            "Not playable yet",
+            isPresented: Binding(get: { unsupportedGame != nil }, set: { if !$0 { unsupportedGame = nil } }),
+            presenting: unsupportedGame
+        ) { _ in
+            Button("OK", role: .cancel) {}
+        } message: { game in
+            Text("RPG Maker \(game.engine.displayName) games will be playable in a future update. MV and MZ games can be played now.")
+        }
+        .fullScreenCover(item: $playingGame, onDismiss: {
+            Task { await viewModel.load() }
+        }) { game in
+            PlayerView(viewModel: PlayerViewModel(
+                game: game,
+                directories: dependencies.directories,
+                repository: dependencies.projectRepository
+            ))
+        }
+        .task {
+            await viewModel.load()
+            #if DEBUG
+            // Launch with `-autoplay` to open the first playable game directly.
+            if ProcessInfo.processInfo.arguments.contains("-autoplay") {
+                playingGame = viewModel.projects.first { $0.engine.isPlayable }
+            }
+            #endif
+        }
+    }
+
+    private func play(_ game: GameProject) {
+        if game.engine.isPlayable {
+            playingGame = game
+        } else {
+            unsupportedGame = game
+        }
     }
 
     private var library: some View {
@@ -69,7 +105,7 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: Theme.Spacing.lg) {
                 if let game = viewModel.continueGame {
                     ContinueCard(game: game) {
-                        router.push(.projectDetail(game.id))
+                        play(game)
                     }
                 }
 
@@ -81,7 +117,7 @@ struct HomeView: View {
                     LazyVGrid(columns: columns, spacing: 16) {
                         ForEach(viewModel.projects) { game in
                             Button {
-                                router.push(.projectDetail(game.id))
+                                play(game)
                             } label: {
                                 GameCard(game: game, isHighlighted: game.id == viewModel.continueGame?.id)
                             }
@@ -105,7 +141,7 @@ struct HomeView: View {
     NavigationStack {
         HomeView(viewModel: HomeViewModel(repository: dependencies.projectRepository, importer: dependencies.gameImporter))
     }
-    .environment(AppRouter())
+    .environment(dependencies)
     .preferredColorScheme(.dark)
 }
 
@@ -114,6 +150,6 @@ struct HomeView: View {
     NavigationStack {
         HomeView(viewModel: HomeViewModel(repository: dependencies.projectRepository, importer: dependencies.gameImporter))
     }
-    .environment(AppRouter())
+    .environment(dependencies)
     .preferredColorScheme(.dark)
 }

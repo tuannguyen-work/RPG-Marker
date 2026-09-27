@@ -23,6 +23,11 @@ nonisolated enum GameEngine: String, Codable, Sendable, CaseIterable {
         case .mz: "MZ"
         }
     }
+
+    /// MV and MZ run in the built-in web runtime; XP/VX/VX Ace need the Ruby runtime (not yet included).
+    var isPlayable: Bool {
+        self == .mv || self == .mz
+    }
 }
 
 nonisolated struct GameProject: Identifiable, Hashable, Codable, Sendable {

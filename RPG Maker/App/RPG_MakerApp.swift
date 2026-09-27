@@ -11,6 +11,7 @@ import SwiftUI
 
 @main
 struct RPG_MakerApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var dependencies = AppDependencies.live
 
     var body: some Scene {

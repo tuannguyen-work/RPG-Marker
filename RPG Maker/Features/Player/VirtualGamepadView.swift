@@ -21,21 +21,23 @@ struct VirtualGamepadView: View {
         HStack(alignment: .bottom) {
             DPadView(onChange: onChange)
             Spacer()
-            VStack(alignment: .trailing, spacing: 20) {
-                HStack(spacing: 12) {
+            VStack(alignment: .trailing, spacing: 18) {
+                HStack(spacing: 8) {
                     SmallPadButton(title: "Menu", button: .menu, onChange: onChange)
                     SmallPadButton(title: "Turbo", button: .turbo, onChange: onChange)
                 }
-                HStack(alignment: .top, spacing: 18) {
+                HStack(alignment: .top, spacing: 12) {
                     RoundPadButton(title: "B", button: .cancel, onChange: onChange)
-                        .offset(y: 28)
+                        .offset(y: 24)
                     RoundPadButton(title: "A", button: .confirm, onChange: onChange)
                 }
-                .padding(.bottom, 28)
+                .padding(.bottom, 24)
             }
         }
-        .padding(.horizontal, 32)
-        .padding(.vertical, 24)
+        // Fits the controls into the black bars beside a 4:3 game on landscape iPhones.
+        .padding(.horizontal, 20)
+        .padding(.vertical, 20)
+        .opacity(0.9)
     }
 }
 
@@ -43,7 +45,7 @@ private struct DPadView: View {
     let onChange: (GamepadButton, Bool) -> Void
 
     @State private var pressed: Set<GamepadButton> = []
-    private let size: CGFloat = 132
+    private let size: CGFloat = 124
     private let deadZone: CGFloat = 14
 
     var body: some View {
@@ -128,7 +130,7 @@ private struct RoundPadButton: View {
     var body: some View {
         Image(isPressed ? .padButtonPressed : .padButton)
             .resizable()
-            .frame(width: 72, height: 72)
+            .frame(width: 64, height: 64)
             .overlay {
                 Text(title)
                     .font(.system(size: 22, weight: .heavy, design: .rounded))
@@ -152,7 +154,7 @@ private struct SmallPadButton: View {
             .font(Theme.Fonts.pixelLabel)
             .textCase(.uppercase)
             .foregroundStyle(Theme.Colors.textPrimary)
-            .frame(width: 76, height: 32)
+            .frame(width: 66, height: 30)
             .background {
                 Image(.padButtonSmall)
                     .resizable(capInsets: EdgeInsets(top: 19, leading: 20, bottom: 19, trailing: 20), resizingMode: .stretch)

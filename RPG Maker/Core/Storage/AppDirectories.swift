@@ -11,16 +11,22 @@ import Foundation
 ///
 ///     <root>/library.json        library metadata
 ///     <root>/Games/<id>/…        imported game files (excluded from iCloud backup: large, re-importable)
+///     <root>/Saves/<id>/…        save data, one file per key (backed up)
 ///     <root>/Staging/<id>/…      in-progress imports, moved into Games/ when complete
 nonisolated struct AppDirectories: Sendable {
     let root: URL
 
     var games: URL { root.appending(path: "Games", directoryHint: .isDirectory) }
+    var saves: URL { root.appending(path: "Saves", directoryHint: .isDirectory) }
     var staging: URL { root.appending(path: "Staging", directoryHint: .isDirectory) }
     var libraryFile: URL { root.appending(path: "library.json", directoryHint: .notDirectory) }
 
     func gameDirectory(for id: UUID) -> URL {
         games.appending(path: id.uuidString, directoryHint: .isDirectory)
+    }
+
+    func saveDirectory(for id: UUID) -> URL {
+        saves.appending(path: id.uuidString, directoryHint: .isDirectory)
     }
 
     /// The folder the runtime loads for `game`.
