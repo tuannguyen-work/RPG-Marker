@@ -84,9 +84,13 @@ struct HomeView: View {
         .task {
             await viewModel.load()
             #if DEBUG
-            // Launch with `-autoplay` to open the first playable game directly.
-            if ProcessInfo.processInfo.arguments.contains("-autoplay") {
-                playingGame = viewModel.projects.first { $0.engine.isPlayable }
+            // Launch with `-autoplay` (first playable game) or `-autoplay <part of a name>`.
+            let arguments = ProcessInfo.processInfo.arguments
+            if let index = arguments.firstIndex(of: "-autoplay") {
+                let name = arguments.indices.contains(index + 1) ? arguments[index + 1] : ""
+                playingGame = viewModel.projects.first {
+                    $0.engine.isPlayable && (name.isEmpty || $0.name.localizedCaseInsensitiveContains(name))
+                }
             }
             #endif
         }

@@ -48,15 +48,21 @@ final class PlayerViewModel {
 
     /// Records play time and makes sure every save reached the disk.
     func stop() async {
+        await recordProgress()
+        session?.tearDown()
+        session = nil
+    }
+
+    /// Flushes saves and adds the play time so far to the library, so nothing is lost
+    /// if the app is closed while in the background.
+    private func recordProgress() async {
         pauseClock()
         guard let session else { return }
         await session.flushSaves()
-        session.tearDown()
-        self.session = nil
         game.playTime += playedThisSession
+        playedThisSession = 0
         game.lastPlayedAt = .now
         game.updatedAt = .now
-        playedThisSession = 0
         try? await repository.save(game)
     }
 
@@ -80,7 +86,7 @@ final class PlayerViewModel {
     }
 
     func appWillResignActive() {
-        pauseClock()
+        Task { await recordProgress() }
     }
 
     private func pauseClock() {

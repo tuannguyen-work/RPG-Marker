@@ -6,7 +6,7 @@ creates. The in-app "Acknowledgements" screen is generated from this list.
 
 | Component | Version | License | Used for | Obligations |
 |---|---|---|---|---|
-| _none yet_ | | | | |
+| [stb_vorbis](https://github.com/nothings/stb) (`Runtime/Audio/stb_vorbis_impl.h`) | 1.22 | MIT or Public Domain (Unlicense), at our choice: MIT | Decoding Ogg Vorbis to WAV for RPG Maker MV games that ship only .ogg | Keep the copyright and license notice (end of the file); list in Acknowledgements |
 
 ## Rules
 

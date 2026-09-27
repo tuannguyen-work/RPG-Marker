@@ -12,12 +12,14 @@ import Foundation
 ///     <root>/library.json        library metadata
 ///     <root>/Games/<id>/…        imported game files (excluded from iCloud backup: large, re-importable)
 ///     <root>/Saves/<id>/…        save data, one file per key (backed up)
+///     <root>/Covers/<id>.png     library cover made from the game's title screen
 ///     <root>/Staging/<id>/…      in-progress imports, moved into Games/ when complete
 nonisolated struct AppDirectories: Sendable {
     let root: URL
 
     var games: URL { root.appending(path: "Games", directoryHint: .isDirectory) }
     var saves: URL { root.appending(path: "Saves", directoryHint: .isDirectory) }
+    var covers: URL { root.appending(path: "Covers", directoryHint: .isDirectory) }
     var staging: URL { root.appending(path: "Staging", directoryHint: .isDirectory) }
     var libraryFile: URL { root.appending(path: "library.json", directoryHint: .notDirectory) }
 
@@ -27,6 +29,10 @@ nonisolated struct AppDirectories: Sendable {
 
     func saveDirectory(for id: UUID) -> URL {
         saves.appending(path: id.uuidString, directoryHint: .isDirectory)
+    }
+
+    func coverFile(for id: UUID) -> URL {
+        covers.appending(path: id.uuidString + ".png", directoryHint: .notDirectory)
     }
 
     /// The folder the runtime loads for `game`.

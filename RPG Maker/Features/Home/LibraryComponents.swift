@@ -7,10 +7,12 @@
 
 import SwiftUI
 
-/// Cover art for a game. Until covers are captured from the title screen,
-/// each game gets one of the built-in pixel-art covers, always the same one for the same game.
+/// Cover art for a game: its own title screen when one was found at import,
+/// otherwise one of the built-in pixel-art covers (always the same one for the same game).
 struct GameCover: View {
     let game: GameProject
+    @Environment(AppDependencies.self) private var dependencies
+    @State private var artwork: UIImage?
 
     private static let fallbacks: [ImageResource] = [
         .coverForest, .coverCastle, .coverSea, .coverDesert,
@@ -26,14 +28,23 @@ struct GameCover: View {
     var body: some View {
         Color.clear
             .overlay {
-                // Covers are stored at their native low resolution; keep the pixels sharp when scaling up.
-                Image(fallback)
-                    .interpolation(.none)
-                    .resizable()
-                    .scaledToFill()
+                if let artwork {
+                    Image(uiImage: artwork)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    // Built-in covers are stored at their native low resolution; keep the pixels sharp.
+                    Image(fallback)
+                        .interpolation(.none)
+                        .resizable()
+                        .scaledToFill()
+                }
             }
             .clipShape(RoundedRectangle(cornerRadius: 6))
             .accessibilityHidden(true)
+            .task(id: game.id) {
+                artwork = UIImage(contentsOfFile: dependencies.directories.coverFile(for: game.id).path)
+            }
     }
 }
 

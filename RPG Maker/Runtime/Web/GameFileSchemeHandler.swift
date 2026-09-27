@@ -21,8 +21,8 @@ final class GameFileSchemeHandler: NSObject, WKURLSchemeHandler {
     static let entryURL = URL(string: "\(scheme)://game/index.html")!
 
     /// Evaluated right after the engine's managers script, so StorageManager/SceneManager can be patched.
-    private static let managersScripts: Set<String> = ["rpg_managers.js", "rmmz_managers.js"]
-    private static let managersPatch = Data("\n;window.__qp && window.__qp.patchEngine();\n".utf8)
+    private nonisolated static let managersScripts: Set<String> = ["rpg_managers.js", "rmmz_managers.js"]
+    private nonisolated static let managersPatch = Data("\n;window.__qp && window.__qp.patchEngine();\n".utf8)
 
     private let root: URL
     private let resolver: CaseInsensitiveResolver
@@ -69,7 +69,7 @@ final class GameFileSchemeHandler: NSObject, WKURLSchemeHandler {
         guard var file = resolver.resolve(path) else {
             // MV asks for .m4a on mobile devices; many PC releases only ship .ogg.
             if path.lowercased().hasSuffix(".m4a"), let ogg = resolver.resolve(String(path.dropLast(4)) + ".ogg") {
-                return response(for: request, url: url, file: ogg)
+                return transcodedResponse(url: url, ogg: ogg)
             }
             Logger.runtime.debug("404 \(path, privacy: .public)")
             DebugLog.write("[404] \(path)")
@@ -77,6 +77,26 @@ final class GameFileSchemeHandler: NSObject, WKURLSchemeHandler {
         }
         file = file.standardizedFileURL
         return response(for: request, url: url, file: file)
+    }
+
+    /// Serves an .ogg as WAV. Loop points travel in headers, read by the MV patch in qp-bridge.js.
+    private nonisolated static func transcodedResponse(url: URL, ogg: URL) -> Result<(URLResponse, Data), Error> {
+        do {
+            let output = try OggTranscoder.wav(fromOgg: ogg)
+            var headers = [
+                "Content-Type": "audio/wav",
+                "Content-Length": String(output.wav.count),
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Expose-Headers": "X-QP-Sample-Rate, X-QP-Loop-Start, X-QP-Loop-Length",
+                "X-QP-Sample-Rate": String(output.sampleRate),
+            ]
+            headers["X-QP-Loop-Start"] = output.loopStart.map(String.init)
+            headers["X-QP-Loop-Length"] = output.loopLength.map(String.init)
+            return .success((HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: headers)!, output.wav))
+        } catch {
+            DebugLog.write("[transcode failed] \(ogg.lastPathComponent): \(error)")
+            return .failure(error)
+        }
     }
 
     private nonisolated static func response(for request: URLRequest, url: URL, file: URL) -> Result<(URLResponse, Data), Error> {

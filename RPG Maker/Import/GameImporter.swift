@@ -38,6 +38,7 @@ actor GameImporter {
 
     private let directories: AppDirectories
     private let repository: any ProjectRepository
+    private var attemptedCovers = Set<GameProject.ID>()
 
     init(directories: AppDirectories, repository: any ProjectRepository) {
         self.directories = directories
@@ -77,10 +78,12 @@ actor GameImporter {
             engine: detection.engine,
             contentPath: contentPath
         )
+        CoverExtractor.writeCover(for: game.engine, contentRoot: directories.contentRoot(for: game), to: directories.coverFile(for: id))
         do {
             try await repository.save(game)
         } catch {
             try? FileManager.default.removeItem(at: gameDirectory)
+            try? FileManager.default.removeItem(at: directories.coverFile(for: id))
             throw error
         }
         Logger.data.info("Imported \(game.engine.displayName, privacy: .public) game at \(game.contentPath, privacy: .public)")
@@ -89,7 +92,19 @@ actor GameImporter {
 
     func deleteGame(_ game: GameProject) async throws {
         try? FileManager.default.removeItem(at: directories.gameDirectory(for: game.id))
+        try? FileManager.default.removeItem(at: directories.coverFile(for: game.id))
         try await repository.delete(id: game.id)
+    }
+
+    /// Creates covers for games imported before covers existed. Games without usable artwork are
+    /// retried at most once per launch.
+    func addMissingCovers(for games: [GameProject]) {
+        for game in games where !attemptedCovers.contains(game.id) {
+            attemptedCovers.insert(game.id)
+            let cover = directories.coverFile(for: game.id)
+            guard !FileManager.default.fileExists(atPath: cover.path) else { continue }
+            CoverExtractor.writeCover(for: game.engine, contentRoot: directories.contentRoot(for: game), to: cover)
+        }
     }
 
     // MARK: - Unpacking

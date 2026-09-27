@@ -40,7 +40,9 @@ final class HomeViewModel {
         isLoading = true
         defer { isLoading = false }
         do {
-            projects = try await repository.fetchAll()
+            let all = try await repository.fetchAll()
+            await importer.addMissingCovers(for: all)
+            projects = all
         } catch {
             Logger.data.error("Failed to load projects: \(error.localizedDescription)")
             errorMessage = error.localizedDescription
@@ -50,11 +52,8 @@ final class HomeViewModel {
     func importGame(from url: URL) async {
         importState = .importing(progress: 0)
         do {
-            _ = try await importer.importGame(from: url) { [weak self] progress in
-                Task { @MainActor in
-                    guard case .importing = self?.importState else { return }
-                    self?.importState = .importing(progress: progress)
-                }
+            _ = try await importer.importGame(from: url) { progress in
+                Task { @MainActor in self.updateImportProgress(progress) }
             }
             importState = nil
             await load()
@@ -62,6 +61,11 @@ final class HomeViewModel {
             Logger.data.error("Import failed: \(error.localizedDescription)")
             importState = .failed(message: error.localizedDescription)
         }
+    }
+
+    private func updateImportProgress(_ progress: Double) {
+        guard case .importing = importState else { return }
+        importState = .importing(progress: progress)
     }
 
     func delete(_ game: GameProject) async {

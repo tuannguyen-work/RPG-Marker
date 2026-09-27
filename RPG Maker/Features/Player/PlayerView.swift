@@ -33,7 +33,6 @@ struct PlayerView: View {
                 VirtualGamepadView { button, isPressed in
                     viewModel.handle(button, isPressed: isPressed)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 .ignoresSafeArea(edges: .horizontal)
             }
 

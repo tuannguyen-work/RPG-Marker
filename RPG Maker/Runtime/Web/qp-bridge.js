@@ -92,15 +92,38 @@
       SceneManager.determineRepeatNumber = function (deltaTime) {
         return original.call(this, deltaTime) * speed;
       };
+    } else if (window.SceneManager && typeof SceneManager.updateMain === "function") {
+      // MV: on iOS it takes its "mobile Safari" path (one update per animation frame, no focus check).
+      // Run `speed` updates per frame, refreshing input between them, and none while paused.
+      SceneManager.updateMain = function () {
+        if (!paused) {
+          for (let i = 0; i < speed; i++) {
+            if (i > 0 && typeof this.updateInputData === "function") this.updateInputData();
+            this.changeScene();
+            this.updateScene();
+          }
+        }
+        this.renderScene();
+        this.requestUpdate();
+      };
+    }
+    if (window.WebAudio && typeof WebAudio.prototype._onXhrLoad === "function") {
+      // MV: audio the app converted from Ogg to WAV carries its loop points in response headers.
+      const onXhrLoad = WebAudio.prototype._onXhrLoad;
+      WebAudio.prototype._onXhrLoad = function (xhr) {
+        onXhrLoad.call(this, xhr);
+        const sampleRate = Number(xhr.getResponseHeader("X-QP-Sample-Rate"));
+        if (sampleRate > 0) {
+          this._sampleRate = sampleRate;
+          this._loopStart = Number(xhr.getResponseHeader("X-QP-Loop-Start")) || 0;
+          this._loopLength = Number(xhr.getResponseHeader("X-QP-Loop-Length")) || 0;
+        }
+      };
     }
   }
 
   function setSpeed(value) {
     speed = value;
-    // MV: the fixed-step loop runs an update every _deltaTime seconds.
-    if (window.SceneManager && typeof SceneManager.determineRepeatNumber !== "function") {
-      SceneManager._deltaTime = 1 / 60 / value;
-    }
   }
 
   // MV/MZ read event.keyCode, which KeyboardEvent's initializer can't set.
@@ -113,6 +136,10 @@
 
   function setPaused(value) {
     paused = value;
+    // Both engines fade audio out/in this way when the page is hidden or shown.
+    if (window.WebAudio && typeof WebAudio._onHide === "function") {
+      value ? WebAudio._onHide() : WebAudio._onShow();
+    }
   }
 
   window.__qp = { patchEngine, setSpeed, setPaused, key };

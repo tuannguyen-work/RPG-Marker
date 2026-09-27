@@ -14,29 +14,39 @@ enum GamepadButton: Hashable, Sendable {
 }
 
 /// On-screen controller overlay. Reports every press and release through `onChange`.
+///
+/// Laid out around where thumbs rest when holding a phone sideways: a little below the middle,
+/// a thumb's width in from each edge. Everything fits in the side bars next to a 4:3 game.
 struct VirtualGamepadView: View {
     var onChange: (GamepadButton, _ isPressed: Bool) -> Void
 
+    /// From the screen edge; clears the Dynamic Island, which can be on either side.
+    private let edgeInset: CGFloat = 44
+    /// Thumb resting height, as a fraction of the screen height.
+    private let thumbLine: CGFloat = 0.62
+
     var body: some View {
-        HStack(alignment: .bottom) {
+        GeometryReader { geometry in
+            let width = geometry.size.width
+            let thumbY = geometry.size.height * thumbLine
+
+            // Left thumb: D-pad on the resting point, the rarely used Turbo above it.
+            let dpadX = edgeInset + DPadView.size / 2
             DPadView(onChange: onChange)
-            Spacer()
-            VStack(alignment: .trailing, spacing: 18) {
-                HStack(spacing: 8) {
-                    SmallPadButton(title: "Menu", button: .menu, onChange: onChange)
-                    SmallPadButton(title: "Turbo", button: .turbo, onChange: onChange)
-                }
-                HStack(alignment: .top, spacing: 12) {
-                    RoundPadButton(title: "B", button: .cancel, onChange: onChange)
-                        .offset(y: 24)
-                    RoundPadButton(title: "A", button: .confirm, onChange: onChange)
-                }
-                .padding(.bottom, 24)
-            }
+                .position(x: dpadX, y: thumbY)
+            SmallPadButton(title: "Turbo", button: .turbo, onChange: onChange)
+                .position(x: dpadX, y: thumbY - DPadView.size / 2 - 34)
+
+            // Right thumb: A (used most) on the resting point, B down and inward like a SNES pad,
+            // Menu above within a short stretch.
+            let aX = width - edgeInset - RoundPadButton.size / 2
+            RoundPadButton(title: "A", button: .confirm, onChange: onChange)
+                .position(x: aX, y: thumbY - 12)
+            RoundPadButton(title: "B", button: .cancel, onChange: onChange)
+                .position(x: aX - 66, y: thumbY + 38)
+            SmallPadButton(title: "Menu", button: .menu, onChange: onChange)
+                .position(x: aX - 40, y: thumbY - 78)
         }
-        // Fits the controls into the black bars beside a 4:3 game on landscape iPhones.
-        .padding(.horizontal, 20)
-        .padding(.vertical, 20)
         .opacity(0.9)
     }
 }
@@ -45,14 +55,18 @@ private struct DPadView: View {
     let onChange: (GamepadButton, Bool) -> Void
 
     @State private var pressed: Set<GamepadButton> = []
-    private let size: CGFloat = 124
+    static let size: CGFloat = 124
+    /// Touches this far outside the drawn pad still count, so a drifting thumb keeps control.
+    private static let slack: CGFloat = 16
     private let deadZone: CGFloat = 14
+    private var hitSize: CGFloat { Self.size + 2 * Self.slack }
 
     var body: some View {
         Image(.padDpad)
             .resizable()
-            .frame(width: size, height: size)
+            .frame(width: Self.size, height: Self.size)
             .offset(tilt)
+            .frame(width: hitSize, height: hitSize)
             .contentShape(Rectangle())
             .gesture(
                 DragGesture(minimumDistance: 0)
@@ -74,8 +88,8 @@ private struct DPadView: View {
 
     /// Up to two directions (diagonals), split into 45° sectors around the center.
     private func directions(at location: CGPoint) -> Set<GamepadButton> {
-        let dx = location.x - size / 2
-        let dy = location.y - size / 2
+        let dx = location.x - hitSize / 2
+        let dy = location.y - hitSize / 2
         guard hypot(dx, dy) > deadZone else { return [] }
         let angle = atan2(-dy, dx) * 180 / .pi  // 0° = right, 90° = up
         var result: Set<GamepadButton> = []
@@ -126,17 +140,19 @@ private struct RoundPadButton: View {
     let onChange: (GamepadButton, Bool) -> Void
 
     @State private var isPressed = false
+    static let size: CGFloat = 64
 
     var body: some View {
         Image(isPressed ? .padButtonPressed : .padButton)
             .resizable()
-            .frame(width: 64, height: 64)
+            .frame(width: Self.size, height: Self.size)
             .overlay {
                 Text(title)
                     .font(.system(size: 22, weight: .heavy, design: .rounded))
                     .foregroundStyle(Theme.Colors.background)
                     .offset(y: isPressed ? 1 : -2)
             }
+            .padding(8) // larger touch target than the drawn button
             .modifier(HoldGesture(button: button, onChange: onChange, isPressed: $isPressed))
             .accessibilityLabel(Text(title))
     }
@@ -161,6 +177,8 @@ private struct SmallPadButton: View {
             }
             .opacity(isPressed ? 0.7 : 1)
             .offset(y: isPressed ? 1 : 0)
+            .padding(.vertical, 7) // 44 pt touch target
+            .padding(.horizontal, 4)
             .modifier(HoldGesture(button: button, onChange: onChange, isPressed: $isPressed))
             .accessibilityLabel(Text(title))
     }
@@ -170,6 +188,6 @@ private struct SmallPadButton: View {
     VirtualGamepadView { button, isPressed in
         print(button, isPressed)
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+    .ignoresSafeArea(edges: .horizontal)
     .background { AppBackground(style: .pattern) }
 }
