@@ -11,3 +11,7 @@ build/
 
 # macOS
 .DS_Store
+
+# Secrets (API keys, IAP config)
+Secrets.xcconfig
+*.secrets.*

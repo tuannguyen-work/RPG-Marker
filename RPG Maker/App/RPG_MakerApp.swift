@@ -3,6 +3,8 @@
 //  RPG Maker
 //
 //  Created by Admin on 9/27/26.
+//  SPDX-License-Identifier: GPL-3.0-or-later
+//  Copyright (C) 2026 The RPG-Marker Authors. See AUTHORS.
 //
 
 import SwiftUI
