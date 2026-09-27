@@ -11,14 +11,22 @@ import os
 
 @Observable
 final class HomeViewModel {
+    enum ImportState: Equatable {
+        case importing(progress: Double)
+        case failed(message: String)
+    }
+
     private(set) var projects: [GameProject] = []
     private(set) var isLoading = false
+    var importState: ImportState?
     var errorMessage: String?
 
     private let repository: any ProjectRepository
+    private let importer: GameImporter
 
-    init(repository: any ProjectRepository) {
+    init(repository: any ProjectRepository, importer: GameImporter) {
         self.repository = repository
+        self.importer = importer
     }
 
     /// The most recently played game, shown in the "Continue" panel.
@@ -39,11 +47,26 @@ final class HomeViewModel {
         }
     }
 
-    /// Placeholder until the import flow (Files picker + engine detection) exists.
-    func importGame() async {
-        let project = GameProject(name: "New Game \(projects.count + 1)", engine: .mz)
+    func importGame(from url: URL) async {
+        importState = .importing(progress: 0)
         do {
-            try await repository.save(project)
+            _ = try await importer.importGame(from: url) { [weak self] progress in
+                Task { @MainActor in
+                    guard case .importing = self?.importState else { return }
+                    self?.importState = .importing(progress: progress)
+                }
+            }
+            importState = nil
+            await load()
+        } catch {
+            Logger.data.error("Import failed: \(error.localizedDescription)")
+            importState = .failed(message: error.localizedDescription)
+        }
+    }
+
+    func delete(_ game: GameProject) async {
+        do {
+            try await importer.deleteGame(game)
             await load()
         } catch {
             errorMessage = error.localizedDescription

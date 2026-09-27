@@ -12,10 +12,14 @@ import Observation
 /// Swap implementations here (e.g. `.preview`) instead of creating services inside views.
 @Observable
 final class AppDependencies {
+    let directories: AppDirectories
     let projectRepository: any ProjectRepository
+    let gameImporter: GameImporter
 
-    init(projectRepository: any ProjectRepository) {
+    init(directories: AppDirectories, projectRepository: any ProjectRepository) {
+        self.directories = directories
         self.projectRepository = projectRepository
+        self.gameImporter = GameImporter(directories: directories, repository: projectRepository)
     }
 
     static var live: AppDependencies {
@@ -25,10 +29,17 @@ final class AppDependencies {
             return preview
         }
         #endif
-        return AppDependencies(projectRepository: InMemoryProjectRepository())
+        let directories = AppDirectories.live
+        return AppDependencies(
+            directories: directories,
+            projectRepository: FileProjectRepository(fileURL: directories.libraryFile)
+        )
     }
 
     static var preview: AppDependencies {
-        AppDependencies(projectRepository: InMemoryProjectRepository(projects: GameProject.samples))
+        AppDependencies(
+            directories: .temporary(),
+            projectRepository: InMemoryProjectRepository(projects: GameProject.samples)
+        )
     }
 }

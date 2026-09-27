@@ -14,8 +14,11 @@ struct RootView: View {
 
     var body: some View {
         NavigationStack(path: $router.path) {
-            HomeView(viewModel: HomeViewModel(repository: dependencies.projectRepository))
-                .navigationDestination(for: Route.self, destination: destination)
+            HomeView(viewModel: HomeViewModel(
+                repository: dependencies.projectRepository,
+                importer: dependencies.gameImporter
+            ))
+            .navigationDestination(for: Route.self, destination: destination)
         }
         .environment(router)
         .tint(Theme.Colors.ember)

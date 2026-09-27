@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum GameEngine: String, Codable, Sendable, CaseIterable {
+nonisolated enum GameEngine: String, Codable, Sendable, CaseIterable {
     case xp
     case vx
     case vxAce
@@ -25,10 +25,12 @@ enum GameEngine: String, Codable, Sendable, CaseIterable {
     }
 }
 
-struct GameProject: Identifiable, Hashable, Codable, Sendable {
+nonisolated struct GameProject: Identifiable, Hashable, Codable, Sendable {
     let id: UUID
     var name: String
     var engine: GameEngine
+    /// Folder the runtime loads, relative to the game's storage directory (e.g. "MyGame/www").
+    var contentPath: String
     var playTime: TimeInterval
     var lastPlayedAt: Date?
     var updatedAt: Date
@@ -37,6 +39,7 @@ struct GameProject: Identifiable, Hashable, Codable, Sendable {
         id: UUID = UUID(),
         name: String,
         engine: GameEngine,
+        contentPath: String = "",
         playTime: TimeInterval = 0,
         lastPlayedAt: Date? = nil,
         updatedAt: Date = .now
@@ -44,6 +47,7 @@ struct GameProject: Identifiable, Hashable, Codable, Sendable {
         self.id = id
         self.name = name
         self.engine = engine
+        self.contentPath = contentPath
         self.playTime = playTime
         self.lastPlayedAt = lastPlayedAt
         self.updatedAt = updatedAt
