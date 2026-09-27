@@ -10,6 +10,7 @@ import SwiftUI
 struct RootView: View {
     @Environment(AppDependencies.self) private var dependencies
     @State private var router = AppRouter()
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     var body: some View {
         NavigationStack(path: $router.path) {
@@ -17,6 +18,15 @@ struct RootView: View {
                 .navigationDestination(for: Route.self, destination: destination)
         }
         .environment(router)
+        .tint(Theme.Colors.ember)
+        .preferredColorScheme(.dark)
+        .fullScreenCover(isPresented: Binding(
+            get: { !hasCompletedOnboarding },
+            set: { hasCompletedOnboarding = !$0 }
+        )) {
+            OnboardingView { hasCompletedOnboarding = true }
+                .preferredColorScheme(.dark)
+        }
     }
 
     @ViewBuilder

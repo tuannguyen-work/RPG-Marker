@@ -21,6 +21,13 @@ final class HomeViewModel {
         self.repository = repository
     }
 
+    /// The most recently played game, shown in the "Continue" panel.
+    var continueGame: GameProject? {
+        projects
+            .filter { $0.lastPlayedAt != nil }
+            .max { ($0.lastPlayedAt ?? .distantPast) < ($1.lastPlayedAt ?? .distantPast) }
+    }
+
     func load() async {
         isLoading = true
         defer { isLoading = false }
@@ -32,8 +39,9 @@ final class HomeViewModel {
         }
     }
 
-    func createProject() async {
-        let project = GameProject(name: "New Project \(projects.count + 1)")
+    /// Placeholder until the import flow (Files picker + engine detection) exists.
+    func importGame() async {
+        let project = GameProject(name: "New Game \(projects.count + 1)", engine: .mz)
         do {
             try await repository.save(project)
             await load()

@@ -5,6 +5,7 @@
 //  Copyright (C) 2026 The RPG-Marker Authors. See AUTHORS.
 //
 
+import Foundation
 import Observation
 
 /// Container for app-wide services, injected into the view tree via `.environment(_:)`.
@@ -18,7 +19,13 @@ final class AppDependencies {
     }
 
     static var live: AppDependencies {
-        AppDependencies(projectRepository: InMemoryProjectRepository())
+        #if DEBUG
+        // Launch with `-sampleData` to fill the library with sample games.
+        if ProcessInfo.processInfo.arguments.contains("-sampleData") {
+            return preview
+        }
+        #endif
+        return AppDependencies(projectRepository: InMemoryProjectRepository())
     }
 
     static var preview: AppDependencies {
