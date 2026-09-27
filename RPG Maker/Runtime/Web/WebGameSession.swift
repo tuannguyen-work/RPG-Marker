@@ -15,20 +15,22 @@ import os
 /// through `GameSaveStore`, and forwards controller input as keyboard events.
 final class WebGameSession: NSObject {
     let webView: WKWebView
+    /// Called with the game's resolution once it's known, and again if the game changes it.
+    var onScreenSize: ((CGSize) -> Void)?
     private let saveStore: GameSaveStore
     private var saveWrites: Task<Void, Never>?
 
     /// Loads the saves first: they are handed to the page before any game script runs.
-    static func make(contentRoot: URL, saveStore: GameSaveStore) async throws -> WebGameSession {
+    static func make(contentRoot: URL, engine: GameEngine, saveStore: GameSaveStore) async throws -> WebGameSession {
         let saves = try await saveStore.loadAll()
-        return try WebGameSession(contentRoot: contentRoot, saveStore: saveStore, saves: saves)
+        return try WebGameSession(contentRoot: contentRoot, engine: engine, saveStore: saveStore, saves: saves)
     }
 
-    private init(contentRoot: URL, saveStore: GameSaveStore, saves: [String: String]) throws {
+    private init(contentRoot: URL, engine: GameEngine, saveStore: GameSaveStore, saves: [String: String]) throws {
         self.saveStore = saveStore
 
         let configuration = WKWebViewConfiguration()
-        configuration.setURLSchemeHandler(GameFileSchemeHandler(root: contentRoot), forURLScheme: GameFileSchemeHandler.scheme)
+        configuration.setURLSchemeHandler(GameFileSchemeHandler(root: contentRoot, engine: engine), forURLScheme: GameFileSchemeHandler.scheme)
         configuration.mediaTypesRequiringUserActionForPlayback = []
         configuration.allowsInlineMediaPlayback = true
         // Saves go through the bridge; nothing needs to persist in WebKit's own storage.
@@ -42,6 +44,15 @@ final class WebGameSession: NSObject {
             injectionTime: .atDocumentStart,
             forMainFrameOnly: true
         ))
+
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-smoketest"),
+           let url = Bundle.main.url(forResource: "qp-smoketest", withExtension: "js"),
+           let smoketest = try? String(contentsOf: url, encoding: .utf8) {
+            configuration.userContentController.addUserScript(WKUserScript(
+                source: smoketest, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
+        }
+        #endif
 
         webView = WKWebView(frame: .zero, configuration: configuration)
         webView.isOpaque = false
@@ -105,6 +116,10 @@ final class WebGameSession: NSObject {
         case "remove":
             guard let key else { return }
             enqueue { await $0.remove(key) }
+        case "screen":
+            if let width = message["width"] as? Double, let height = message["height"] as? Double, width > 0, height > 0 {
+                onScreenSize?(CGSize(width: width, height: height))
+            }
         case "log":
             let text = message["message"] as? String ?? ""
             Logger.runtime.error("Game \(message["level"] as? String ?? "", privacy: .public): \(text, privacy: .public)")

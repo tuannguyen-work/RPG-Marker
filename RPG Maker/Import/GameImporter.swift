@@ -17,6 +17,7 @@ actor GameImporter {
         case damagedArchive
         case rpgMaker2000
         case noGameFound
+        case missingImages
 
         var errorDescription: String? {
             switch self {
@@ -32,6 +33,8 @@ actor GameImporter {
                 String(localized: "RPG Maker 2000 and 2003 games aren't supported yet.")
             case .noGameFound:
                 String(localized: "No RPG Maker XP, VX, VX Ace, MV or MZ game was found in this file.")
+            case .missingImages:
+                String(localized: "This game is missing its image files. It may be the game's source code rather than a playable build; download the full release instead.")
             }
         }
     }
@@ -69,6 +72,10 @@ actor GameImporter {
             throw ImportError.rpgMaker2000
         } catch {
             throw ImportError.noGameFound
+        }
+
+        if detection.engine.isPlayable, !Self.hasSystemImages(in: detection.root) {
+            throw ImportError.missingImages
         }
 
         // Resolve while staging still exists: symlinks (/var → /private/var) only resolve for existing paths.
@@ -149,6 +156,13 @@ actor GameImporter {
             do { try body(readableURL) } catch { bodyError = error }
         }
         if let error = bodyError ?? coordinatorError { throw error }
+    }
+
+    /// MV/MZ can't draw a single window without img/system (plain or encrypted files).
+    private static func hasSystemImages(in root: URL) -> Bool {
+        guard let system = CaseInsensitiveResolver(root: root).resolve("img/system") else { return false }
+        let files = (try? FileManager.default.contentsOfDirectory(atPath: system.path)) ?? []
+        return files.contains { $0.lowercased().hasPrefix("window.") }
     }
 
     private static func isInboxCopy(_ url: URL) -> Bool {

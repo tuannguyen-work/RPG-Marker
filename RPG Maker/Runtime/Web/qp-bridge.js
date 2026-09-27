@@ -144,6 +144,16 @@
 
   window.__qp = { patchEngine, setSpeed, setPaused, key };
 
+  // Report the game's resolution so the app can tell whether its controls cover the game.
+  let reportedSize = "";
+  setInterval(() => {
+    if (!window.Graphics || !Graphics.width || !Graphics.height) return;
+    const size = Graphics.width + "x" + Graphics.height;
+    if (size === reportedSize) return;
+    reportedSize = size;
+    post({ op: "screen", width: Graphics.width, height: Graphics.height });
+  }, 1000);
+
   // Surface script errors and console warnings in the app's log.
   for (const level of ["error", "warn"]) {
     const original = console[level].bind(console);

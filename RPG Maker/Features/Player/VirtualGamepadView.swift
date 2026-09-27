@@ -18,7 +18,12 @@ enum GamepadButton: Hashable, Sendable {
 /// Laid out around where thumbs rest when holding a phone sideways: a little below the middle,
 /// a thumb's width in from each edge. Everything fits in the side bars next to a 4:3 game.
 struct VirtualGamepadView: View {
+    /// True when the game fills the screen behind the controls; they fade so the game stays readable.
+    var coversGame = false
     var onChange: (GamepadButton, _ isPressed: Bool) -> Void
+
+    /// Width each side needs for the controls not to overlap the game.
+    static let sideBarWidth: CGFloat = 170
 
     /// From the screen edge; clears the Dynamic Island, which can be on either side.
     private let edgeInset: CGFloat = 44
@@ -47,7 +52,8 @@ struct VirtualGamepadView: View {
             SmallPadButton(title: "Menu", button: .menu, onChange: onChange)
                 .position(x: aX - 40, y: thumbY - 78)
         }
-        .opacity(0.9)
+        .opacity(coversGame ? 0.45 : 0.9)
+        .animation(.easeInOut, value: coversGame)
     }
 }
 

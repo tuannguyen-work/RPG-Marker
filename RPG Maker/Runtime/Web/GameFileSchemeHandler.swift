@@ -26,11 +26,14 @@ final class GameFileSchemeHandler: NSObject, WKURLSchemeHandler {
 
     private let root: URL
     private let resolver: CaseInsensitiveResolver
+    /// MV can't decode Vorbis on iOS, so its .ogg files are served as WAV. MZ decodes them itself.
+    private let transcodesOgg: Bool
     private var activeTasks = Set<ObjectIdentifier>()
 
-    init(root: URL) {
+    init(root: URL, engine: GameEngine) {
         self.root = root.standardizedFileURL
         self.resolver = CaseInsensitiveResolver(root: self.root)
+        self.transcodesOgg = engine == .mv
     }
 
     func webView(_ webView: WKWebView, start task: any WKURLSchemeTask) {
@@ -38,9 +41,10 @@ final class GameFileSchemeHandler: NSObject, WKURLSchemeHandler {
         activeTasks.insert(id)
         let request = task.request
         let resolver = resolver
+        let transcodesOgg = transcodesOgg
 
         Task.detached(priority: .userInitiated) {
-            let result = Self.response(for: request, resolver: resolver)
+            let result = Self.response(for: request, resolver: resolver, transcodesOgg: transcodesOgg)
             await MainActor.run {
                 // WebKit raises if a stopped task is answered.
                 guard self.activeTasks.remove(id) != nil else { return }
@@ -62,13 +66,19 @@ final class GameFileSchemeHandler: NSObject, WKURLSchemeHandler {
 
     // MARK: - Response
 
-    private nonisolated static func response(for request: URLRequest, resolver: CaseInsensitiveResolver) -> Result<(URLResponse, Data), Error> {
+    private nonisolated static func response(for request: URLRequest, resolver: CaseInsensitiveResolver, transcodesOgg: Bool) -> Result<(URLResponse, Data), Error> {
         guard let url = request.url else { return .failure(URLError(.badURL)) }
         let path = url.path(percentEncoded: false)
+        let lowercasedPath = path.lowercased()
+
+        // Some MV plugins request .ogg directly instead of the mobile default .m4a.
+        if transcodesOgg, lowercasedPath.hasSuffix(".ogg"), let ogg = resolver.resolve(path) {
+            return transcodedResponse(url: url, ogg: ogg)
+        }
 
         guard var file = resolver.resolve(path) else {
             // MV asks for .m4a on mobile devices; many PC releases only ship .ogg.
-            if path.lowercased().hasSuffix(".m4a"), let ogg = resolver.resolve(String(path.dropLast(4)) + ".ogg") {
+            if lowercasedPath.hasSuffix(".m4a"), let ogg = resolver.resolve(String(path.dropLast(4)) + ".ogg") {
                 return transcodedResponse(url: url, ogg: ogg)
             }
             Logger.runtime.debug("404 \(path, privacy: .public)")
@@ -80,7 +90,15 @@ final class GameFileSchemeHandler: NSObject, WKURLSchemeHandler {
     }
 
     /// Serves an .ogg as WAV. Loop points travel in headers, read by the MV patch in qp-bridge.js.
+    /// Files that aren't Ogg Vorbis (renamed .m4a, Opus) are passed through for WebKit to decode.
     private nonisolated static func transcodedResponse(url: URL, ogg: URL) -> Result<(URLResponse, Data), Error> {
+        let header = (try? FileHandle(forReadingFrom: ogg)).flatMap { handle in
+            defer { try? handle.close() }
+            return try? handle.read(upToCount: 64)
+        } ?? Data()
+        if header.count >= 8, header[header.startIndex + 4 ..< header.startIndex + 8] == Data("ftyp".utf8) {
+            return passthrough(url: url, file: ogg, contentType: "audio/mp4")
+        }
         do {
             let output = try OggTranscoder.wav(fromOgg: ogg)
             var headers = [
@@ -95,6 +113,16 @@ final class GameFileSchemeHandler: NSObject, WKURLSchemeHandler {
             return .success((HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: headers)!, output.wav))
         } catch {
             DebugLog.write("[transcode failed] \(ogg.lastPathComponent): \(error)")
+            return passthrough(url: url, file: ogg, contentType: "audio/ogg")
+        }
+    }
+
+    private nonisolated static func passthrough(url: URL, file: URL, contentType: String) -> Result<(URLResponse, Data), Error> {
+        do {
+            let data = try Data(contentsOf: file, options: .mappedIfSafe)
+            let headers = ["Content-Type": contentType, "Content-Length": String(data.count), "Access-Control-Allow-Origin": "*"]
+            return .success((HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: headers)!, data))
+        } catch {
             return .failure(error)
         }
     }

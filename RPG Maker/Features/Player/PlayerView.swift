@@ -30,8 +30,10 @@ struct PlayerView: View {
             }
 
             if viewModel.session != nil && viewModel.showsControls {
-                VirtualGamepadView { button, isPressed in
-                    viewModel.handle(button, isPressed: isPressed)
+                GeometryReader { geometry in
+                    VirtualGamepadView(coversGame: coversGame(in: geometry.size)) { button, isPressed in
+                        viewModel.handle(button, isPressed: isPressed)
+                    }
                 }
                 .ignoresSafeArea(edges: .horizontal)
             }
@@ -60,6 +62,14 @@ struct PlayerView: View {
                 viewModel.appWillResignActive()
             }
         }
+    }
+
+    /// Whether the side bars next to the letterboxed game are too narrow for the controls,
+    /// as with widescreen games.
+    private func coversGame(in screen: CGSize) -> Bool {
+        guard let game = viewModel.gameSize, screen.height > 0 else { return false }
+        let gameWidth = min(screen.width, screen.height * game.width / game.height)
+        return (screen.width - gameWidth) / 2 < VirtualGamepadView.sideBarWidth
     }
 
     private var topBar: some View {

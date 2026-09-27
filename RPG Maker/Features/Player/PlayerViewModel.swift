@@ -19,6 +19,8 @@ final class PlayerViewModel {
         didSet { session?.setPaused(isPaused) }
     }
     var showsControls = true
+    /// The game's own resolution, reported by the engine after it boots.
+    private(set) var gameSize: CGSize?
 
     private let directories: AppDirectories
     private let repository: any ProjectRepository
@@ -36,7 +38,9 @@ final class PlayerViewModel {
         guard session == nil else { return }
         do {
             let store = GameSaveStore(directory: directories.saveDirectory(for: game.id))
-            session = try await WebGameSession.make(contentRoot: directories.contentRoot(for: game), saveStore: store)
+            let session = try await WebGameSession.make(contentRoot: directories.contentRoot(for: game), engine: game.engine, saveStore: store)
+            session.onScreenSize = { [weak self] size in self?.gameSize = size }
+            self.session = session
             activeSince = .now
             game.lastPlayedAt = .now
             try? await repository.save(game)
