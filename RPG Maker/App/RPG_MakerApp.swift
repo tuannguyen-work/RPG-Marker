@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct RPG_MakerApp: App {
+    @State private var dependencies = AppDependencies.live
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
+                .environment(dependencies)
         }
     }
 }
