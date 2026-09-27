@@ -28,7 +28,11 @@ nonisolated enum OggTranscoder {
     private static let cacheDirectory = URL.cachesDirectory.appending(path: "TranscodedAudio", directoryHint: .isDirectory)
 
     static func wav(fromOgg url: URL) throws -> Output {
-        let ogg = try Data(contentsOf: url, options: .mappedIfSafe)
+        try wav(fromOgg: Data(contentsOf: url, options: .mappedIfSafe), identity: url)
+    }
+
+    /// `identity` is the file the data came from (possibly encrypted); it keys the cache.
+    static func wav(fromOgg ogg: Data, identity url: URL) throws -> Output {
         let loop = loopPoints(in: ogg)
         let cached = cacheDirectory.appending(path: try cacheKey(for: url) + ".wav")
 

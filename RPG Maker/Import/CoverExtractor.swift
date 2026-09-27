@@ -32,7 +32,7 @@ nonisolated enum CoverExtractor {
         let resolver = CaseInsensitiveResolver(root: contentRoot)
         switch engine {
         case .mv, .mz:
-            if let title = mvTitleImage(resolver: resolver) { return title }
+            if let title = mvTitleImage(resolver: resolver, contentRoot: contentRoot) { return title }
             return resolver.resolve("icon/icon.png").flatMap(thumbnail)
         case .xp, .vx, .vxAce:
             // The title name lives in Ruby-serialized data; these folders usually hold just that image.
@@ -52,23 +52,42 @@ nonisolated enum CoverExtractor {
     }
 
     /// The title screen as the game draws it: `title1Name` with the `title2Name` frame on top.
-    private static func mvTitleImage(resolver: CaseInsensitiveResolver) -> CGImage? {
+    private static func mvTitleImage(resolver: CaseInsensitiveResolver, contentRoot: URL) -> CGImage? {
         guard let systemURL = resolver.resolve("data/System.json"),
               let data = try? Data(contentsOf: systemURL),
               let system = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let title1 = system["title1Name"] as? String, !title1.isEmpty,
-              let background = resolver.resolve("img/titles1/\(title1).png").flatMap(thumbnail) else {
+              let title1 = system["title1Name"] as? String, !title1.isEmpty else {
             return nil
         }
+        let cipher = RPGMakerCipher(contentRoot: contentRoot)
+        guard let background = image(named: "img/titles1/\(title1)", resolver: resolver, cipher: cipher) else { return nil }
         guard let title2 = system["title2Name"] as? String, !title2.isEmpty,
-              let frame = resolver.resolve("img/titles2/\(title2).png").flatMap(thumbnail) else {
+              let frame = image(named: "img/titles2/\(title2)", resolver: resolver, cipher: cipher) else {
             return background
         }
         return composite(background, frame)
     }
 
+    /// A PNG by name without extension: plain, or encrypted by deployment (MV .rpgmvp, MZ .png_).
+    private static func image(named name: String, resolver: CaseInsensitiveResolver, cipher: RPGMakerCipher?) -> CGImage? {
+        if let url = resolver.resolve(name + ".png") { return thumbnail(url) }
+        guard let cipher else { return nil }
+        for encryptedExtension in ["rpgmvp", "png_"] {
+            if let url = resolver.resolve("\(name).\(encryptedExtension)"),
+               let encrypted = try? Data(contentsOf: url),
+               let png = cipher.decrypt(encrypted),
+               let source = CGImageSourceCreateWithData(png as CFData, nil) {
+                return thumbnail(source)
+            }
+        }
+        return nil
+    }
+
     private static func thumbnail(_ url: URL) -> CGImage? {
-        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+        CGImageSourceCreateWithURL(url as CFURL, nil).flatMap(thumbnail)
+    }
+
+    private static func thumbnail(_ source: CGImageSource) -> CGImage? {
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
             kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,

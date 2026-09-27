@@ -26,14 +26,15 @@ final class GameFileSchemeHandler: NSObject, WKURLSchemeHandler {
 
     private let root: URL
     private let resolver: CaseInsensitiveResolver
-    /// MV can't decode Vorbis on iOS, so its .ogg files are served as WAV. MZ decodes them itself.
-    private let transcodesOgg: Bool
+    private let cipher: RPGMakerCipher?
+    private let mvAudio: MVAudio?
     private var activeTasks = Set<ObjectIdentifier>()
 
     init(root: URL, engine: GameEngine) {
         self.root = root.standardizedFileURL
         self.resolver = CaseInsensitiveResolver(root: self.root)
-        self.transcodesOgg = engine == .mv
+        self.cipher = RPGMakerCipher(contentRoot: self.root)
+        self.mvAudio = engine == .mv ? MVAudio(cipher: cipher) : nil
     }
 
     func webView(_ webView: WKWebView, start task: any WKURLSchemeTask) {
@@ -41,10 +42,11 @@ final class GameFileSchemeHandler: NSObject, WKURLSchemeHandler {
         activeTasks.insert(id)
         let request = task.request
         let resolver = resolver
-        let transcodesOgg = transcodesOgg
+        let mvAudio = mvAudio
+        let cipher = cipher
 
         Task.detached(priority: .userInitiated) {
-            let result = Self.response(for: request, resolver: resolver, transcodesOgg: transcodesOgg)
+            let result = Self.response(for: request, resolver: resolver, mvAudio: mvAudio, cipher: cipher)
             await MainActor.run {
                 // WebKit raises if a stopped task is answered.
                 guard self.activeTasks.remove(id) != nil else { return }
@@ -66,20 +68,20 @@ final class GameFileSchemeHandler: NSObject, WKURLSchemeHandler {
 
     // MARK: - Response
 
-    private nonisolated static func response(for request: URLRequest, resolver: CaseInsensitiveResolver, transcodesOgg: Bool) -> Result<(URLResponse, Data), Error> {
+    private nonisolated static func response(for request: URLRequest, resolver: CaseInsensitiveResolver, mvAudio: MVAudio?, cipher: RPGMakerCipher?) -> Result<(URLResponse, Data), Error> {
         guard let url = request.url else { return .failure(URLError(.badURL)) }
         let path = url.path(percentEncoded: false)
-        let lowercasedPath = path.lowercased()
 
-        // Some MV plugins request .ogg directly instead of the mobile default .m4a.
-        if transcodesOgg, lowercasedPath.hasSuffix(".ogg"), let ogg = resolver.resolve(path) {
-            return transcodedResponse(url: url, ogg: ogg)
+        if let mvAudio, let source = mvAudio.oggSource(for: path, resolver: resolver) {
+            return transcodedResponse(url: url, ogg: source.file, cipher: source.isEncrypted ? mvAudio.cipher : nil)
         }
 
         guard var file = resolver.resolve(path) else {
-            // MV asks for .m4a on mobile devices; many PC releases only ship .ogg.
-            if lowercasedPath.hasSuffix(".m4a"), let ogg = resolver.resolve(String(path.dropLast(4)) + ".ogg") {
-                return transcodedResponse(url: url, ogg: ogg)
+            // MV shows img/system/Loading.png with a plain <img>, bypassing its own decrypter.
+            if let cipher, path.lowercased().hasSuffix(".png"),
+               let png = decryptedSibling(of: path, extensions: ["rpgmvp", "png_"], resolver: resolver, cipher: cipher) {
+                let headers = ["Content-Type": "image/png", "Content-Length": String(png.count), "Access-Control-Allow-Origin": "*"]
+                return .success((HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: headers)!, png))
             }
             Logger.runtime.debug("404 \(path, privacy: .public)")
             DebugLog.write("[404] \(path)")
@@ -89,28 +91,61 @@ final class GameFileSchemeHandler: NSObject, WKURLSchemeHandler {
         return response(for: request, url: url, file: file)
     }
 
-    /// Serves an .ogg as WAV. Loop points travel in headers, read by the MV patch in qp-bridge.js.
-    /// Files that aren't Ogg Vorbis (renamed .m4a, Opus) are passed through for WebKit to decode.
-    private nonisolated static func transcodedResponse(url: URL, ogg: URL) -> Result<(URLResponse, Data), Error> {
-        let header = (try? FileHandle(forReadingFrom: ogg)).flatMap { handle in
-            defer { try? handle.close() }
-            return try? handle.read(upToCount: 64)
-        } ?? Data()
-        if header.count >= 8, header[header.startIndex + 4 ..< header.startIndex + 8] == Data("ftyp".utf8) {
+    private nonisolated static func decryptedSibling(of path: String, extensions: [String], resolver: CaseInsensitiveResolver, cipher: RPGMakerCipher) -> Data? {
+        let stem = String(path[..<(path.lastIndex(of: ".") ?? path.endIndex)])
+        for encryptedExtension in extensions {
+            if let file = resolver.resolve("\(stem).\(encryptedExtension)"),
+               let data = try? Data(contentsOf: file),
+               let decrypted = cipher.decrypt(data) {
+                return decrypted
+            }
+        }
+        return nil
+    }
+
+    /// RPG Maker MV can't decode Vorbis on iOS: its Ogg audio (plain or encrypted) is served as WAV.
+    /// MZ ships its own Vorbis decoder and is left alone.
+    nonisolated struct MVAudio: Sendable {
+        let cipher: RPGMakerCipher?
+
+        /// The Ogg file to convert for a requested audio path, if any.
+        func oggSource(for path: String, resolver: CaseInsensitiveResolver) -> (file: URL, isEncrypted: Bool)? {
+            let lowercased = path.lowercased()
+            let stem = String(path[..<(path.lastIndex(of: ".") ?? path.endIndex)])
+            switch (lowercased as NSString).pathExtension {
+            // Requested directly, e.g. by plugins that bypass the mobile default of .m4a.
+            case "ogg": return resolver.resolve(path).map { ($0, false) }
+            case "rpgmvo": return resolver.resolve(path).map { ($0, true) }
+            // MV asks for .m4a on mobile devices; many PC releases only ship .ogg.
+            case "m4a": return resolver.resolve(path) == nil ? resolver.resolve(stem + ".ogg").map { ($0, false) } : nil
+            case "rpgmvm": return resolver.resolve(path) == nil ? resolver.resolve(stem + ".rpgmvo").map { ($0, true) } : nil
+            default: return nil
+            }
+        }
+    }
+
+    /// Serves an Ogg file as WAV, re-encrypted when the game expects encrypted audio. Loop points travel
+    /// in headers, read by the MV patch in qp-bridge.js. Files that aren't Ogg Vorbis (renamed .m4a,
+    /// Opus) are passed through unchanged for the engine and WebKit to handle.
+    private nonisolated static func transcodedResponse(url: URL, ogg: URL, cipher: RPGMakerCipher?) -> Result<(URLResponse, Data), Error> {
+        guard let raw = try? Data(contentsOf: ogg, options: .mappedIfSafe) else { return .failure(URLError(.fileDoesNotExist)) }
+        let data = cipher.flatMap { $0.decrypt(raw) } ?? raw
+        if data.count >= 8, data[data.startIndex + 4 ..< data.startIndex + 8] == Data("ftyp".utf8) {
             return passthrough(url: url, file: ogg, contentType: "audio/mp4")
         }
         do {
-            let output = try OggTranscoder.wav(fromOgg: ogg)
+            let output = try OggTranscoder.wav(fromOgg: data, identity: ogg)
+            let body = cipher.map { $0.encrypt(output.wav) } ?? output.wav
             var headers = [
                 "Content-Type": "audio/wav",
-                "Content-Length": String(output.wav.count),
+                "Content-Length": String(body.count),
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Expose-Headers": "X-QP-Sample-Rate, X-QP-Loop-Start, X-QP-Loop-Length",
                 "X-QP-Sample-Rate": String(output.sampleRate),
             ]
             headers["X-QP-Loop-Start"] = output.loopStart.map(String.init)
             headers["X-QP-Loop-Length"] = output.loopLength.map(String.init)
-            return .success((HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: headers)!, output.wav))
+            return .success((HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: headers)!, body))
         } catch {
             DebugLog.write("[transcode failed] \(ogg.lastPathComponent): \(error)")
             return passthrough(url: url, file: ogg, contentType: "audio/ogg")
