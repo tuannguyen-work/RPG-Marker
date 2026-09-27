@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Merged with the Info.plist keys Xcode generates from build settings (GENERATE_INFOPLIST_FILE).
+  Only keys that have no INFOPLIST_KEY_ build setting belong here.
+-->
+<plist version="1.0">
+<dict>
+	<!-- "Open in…" from Files and the share sheet. Alternate rank: offered, never the default app for ZIPs. -->
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>ZIP Archive</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.zip-archive</string>
+			</array>
+		</dict>
+	</array>
+	<!-- Read shared files where they are instead of receiving a copy: games can be hundreds of MB. -->
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+</dict>
+</plist>

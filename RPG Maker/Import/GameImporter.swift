@@ -48,7 +48,11 @@ actor GameImporter {
     /// Imports a ZIP archive or a folder. `progress` receives 0...1 while extracting.
     func importGame(from source: URL, progress: @escaping @Sendable (Double) -> Void) async throws -> GameProject {
         let isAccessing = source.startAccessingSecurityScopedResource()
-        defer { if isAccessing { source.stopAccessingSecurityScopedResource() } }
+        defer {
+            if isAccessing { source.stopAccessingSecurityScopedResource() }
+            // When a file is shared as a copy, iOS puts it in Documents/Inbox; it's no longer needed.
+            if Self.isInboxCopy(source) { try? FileManager.default.removeItem(at: source) }
+        }
 
         try directories.prepare()
         let id = UUID()
@@ -145,6 +149,11 @@ actor GameImporter {
             do { try body(readableURL) } catch { bodyError = error }
         }
         if let error = bodyError ?? coordinatorError { throw error }
+    }
+
+    private static func isInboxCopy(_ url: URL) -> Bool {
+        let inbox = URL.documentsDirectory.appending(path: "Inbox").resolvingSymlinksInPath().path + "/"
+        return url.resolvingSymlinksInPath().path.hasPrefix(inbox)
     }
 
     private static func relativePath(of url: URL, in base: URL) -> String {

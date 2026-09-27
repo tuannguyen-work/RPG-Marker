@@ -45,6 +45,11 @@ struct HomeView: View {
             guard case .success(let url) = result else { return }
             Task { await viewModel.importGame(from: url) }
         }
+        // "Open in…" / share sheet from Files and other apps.
+        .onOpenURL { url in
+            guard url.isFileURL else { return }
+            Task { await viewModel.importGame(from: url) }
+        }
         .overlay {
             if let state = viewModel.importState {
                 ImportStatusView(state: state) {
