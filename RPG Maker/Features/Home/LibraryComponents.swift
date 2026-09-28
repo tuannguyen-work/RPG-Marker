@@ -204,6 +204,7 @@ struct ContinueCard: View {
 
 struct EmptyLibraryView: View {
     let onImport: () -> Void
+    let onHelp: () -> Void
 
     var body: some View {
         VStack(spacing: 20) {
@@ -221,8 +222,16 @@ struct EmptyLibraryView: View {
                     .foregroundStyle(Theme.Colors.textSecondary)
                     .multilineTextAlignment(.center)
             }
-            Button("Import Game", action: onImport)
+            VStack(spacing: 12) {
+                Button(action: onImport) {
+                    Label("Import Game", systemImage: "plus").frame(maxWidth: 240)
+                }
                 .buttonStyle(.pixel)
+                Button(action: onHelp) {
+                    Label("How to Add Games", systemImage: "questionmark.circle").frame(maxWidth: 240)
+                }
+                .buttonStyle(.pixelSecondary)
+            }
         }
         .padding(32)
     }

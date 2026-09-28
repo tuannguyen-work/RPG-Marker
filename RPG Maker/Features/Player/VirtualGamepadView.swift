@@ -14,9 +14,7 @@ enum GamepadButton: Hashable, Sendable {
 }
 
 /// On-screen controller overlay. Reports every press and release through `onChange`.
-///
-/// Laid out around where thumbs rest when holding a phone sideways: a little below the middle,
-/// a thumb's width in from each edge. Everything fits in the side bars next to a 4:3 game.
+/// Everything fits in the side bars next to a 4:3 game (see `GamepadLayout`).
 struct VirtualGamepadView: View {
     /// True when the game fills the screen behind the controls; they fade so the game stays readable.
     var coversGame = false
@@ -27,47 +25,68 @@ struct VirtualGamepadView: View {
     /// Width each side needs for the controls not to overlap the game.
     static let sideBarWidth: CGFloat = 170
 
-    /// From the screen edge: clears the Dynamic Island (either side) and keeps the buttons under
-    /// the thumbs rather than at the very edge.
-    private let edgeInset: CGFloat = 60
-    /// Thumb resting height, as a fraction of the screen height.
-    private let thumbLine: CGFloat = 0.6
-
     @AppStorage(PreferenceKey.controlsOpacity) private var opacity = 0.9
     @AppStorage(PreferenceKey.controlsSize) private var size = ControlsSize.medium
 
     var body: some View {
         GeometryReader { geometry in
-            let width = geometry.size.width
-            let thumbY = geometry.size.height * thumbLine
-            // Scaling keeps each group anchored on its thumb point; gestures scale with the drawing.
-            let scale = size.scale
-
-            // Left thumb: direction buttons on the resting point, the rarely used Turbo above them.
-            // The direction cross is wide, so it sits a little closer to the edge than the A/B side.
-            let dpadX = edgeInset - 10 + DirectionPad.size * scale / 2
+            let layout = GamepadLayout(size: geometry.size, scale: size.scale)
             DirectionPad(onChange: onChange)
-                .scaleEffect(scale)
-                .position(x: dpadX, y: thumbY)
+                .scaleEffect(layout.scale)
+                .position(layout.dpad)
             SmallPadButton(title: turboTitle, button: .turbo, onChange: onChange)
-                .scaleEffect(scale)
-                .position(x: dpadX, y: thumbY - (DirectionPad.size / 2 + 30) * scale)
-
-            // Right thumb: A (used most) on the resting point, B down and inward like a SNES pad,
-            // Menu above within a short stretch.
-            let aX = width - edgeInset - RoundPadButton.size * scale / 2
+                .scaleEffect(layout.scale)
+                .position(layout.turbo)
             RoundPadButton(title: "A", button: .confirm, onChange: onChange)
-                .scaleEffect(scale)
-                .position(x: aX, y: thumbY - 12 * scale)
+                .scaleEffect(layout.scale)
+                .position(layout.confirm)
             RoundPadButton(title: "B", button: .cancel, onChange: onChange)
-                .scaleEffect(scale)
-                .position(x: aX - 66 * scale, y: thumbY + 38 * scale)
+                .scaleEffect(layout.scale)
+                .position(layout.cancel)
             SmallPadButton(title: "Menu", button: .menu, onChange: onChange)
-                .scaleEffect(scale)
-                .position(x: aX - 40 * scale, y: thumbY - 78 * scale)
+                .scaleEffect(layout.scale)
+                .position(layout.menu)
         }
         .opacity(coversGame ? opacity * 0.5 : opacity)
         .animation(.easeInOut, value: coversGame)
+    }
+}
+
+/// Where each control sits, shared with the first-play controls guide so its callouts line up.
+///
+/// Laid out around where thumbs rest when holding a phone sideways: a little below the middle,
+/// a thumb's width in from each edge. Scaling keeps each group anchored on its thumb point.
+struct GamepadLayout {
+    let scale: CGFloat
+    let dpad: CGPoint
+    let turbo: CGPoint
+    let confirm: CGPoint
+    let cancel: CGPoint
+    let menu: CGPoint
+
+    /// From the screen edge: clears the Dynamic Island (either side) and keeps the buttons under
+    /// the thumbs rather than at the very edge.
+    private static let edgeInset: CGFloat = 60
+    /// Thumb resting height, as a fraction of the screen height.
+    private static let thumbLine: CGFloat = 0.6
+
+    static let directionPadSize = DirectionPad.size
+    static let roundButtonSize = RoundPadButton.size
+
+    init(size: CGSize, scale: CGFloat) {
+        self.scale = scale
+        let thumbY = size.height * Self.thumbLine
+        // Left thumb: direction buttons on the resting point, the rarely used Turbo above them.
+        // The direction cross is wide, so it sits a little closer to the edge than the A/B side.
+        let dpadX = Self.edgeInset - 10 + DirectionPad.size * scale / 2
+        dpad = CGPoint(x: dpadX, y: thumbY)
+        turbo = CGPoint(x: dpadX, y: thumbY - (DirectionPad.size / 2 + 30) * scale)
+        // Right thumb: A (used most) on the resting point, B down and inward like a SNES pad,
+        // Menu above within a short stretch.
+        let aX = size.width - Self.edgeInset - RoundPadButton.size * scale / 2
+        confirm = CGPoint(x: aX, y: thumbY - 12 * scale)
+        cancel = CGPoint(x: aX - 66 * scale, y: thumbY + 38 * scale)
+        menu = CGPoint(x: aX - 40 * scale, y: thumbY - 78 * scale)
     }
 }
 

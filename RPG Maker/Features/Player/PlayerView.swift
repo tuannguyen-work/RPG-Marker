@@ -13,6 +13,7 @@ struct PlayerView: View {
     @State var viewModel: PlayerViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
+    @AppStorage(PreferenceKey.hasSeenControlsGuide) private var hasSeenControlsGuide = false
 
     var body: some View {
         ZStack {
@@ -40,6 +41,12 @@ struct PlayerView: View {
 
             topBar
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+
+            if viewModel.session != nil && viewModel.showsControls && !hasSeenControlsGuide {
+                ControlsGuideOverlay(turboTitle: "Turbo", turboMeaning: "Tap to play at 3× speed, tap again for normal.") {
+                    hasSeenControlsGuide = true
+                }
+            }
 
             if viewModel.isPaused {
                 PauseMenu(viewModel: viewModel) {

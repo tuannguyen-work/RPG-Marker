@@ -20,6 +20,8 @@ struct HomeView: View {
     /// Started from the detail sheet: presented once the sheet is gone.
     @State private var pendingPlay: GameProject?
     @State private var isSyncingSaves = false
+    @State private var isHelpPresented = false
+    @State private var helpTopic: GuideTopic?
     /// The game in the player, kept after it closes so its new saves can be uploaded.
     @State private var sessionGame: GameProject?
     @Namespace private var transition
@@ -35,6 +37,8 @@ struct HomeView: View {
             if viewModel.projects.isEmpty && !viewModel.isLoading && viewModel.importState == nil {
                 EmptyLibraryView {
                     isFilePickerPresented = true
+                } onHelp: {
+                    showHelp(.importing)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -50,6 +54,11 @@ struct HomeView: View {
                     isSettingsPresented = true
                 }
             }
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Guide", systemImage: "questionmark.circle") {
+                    showHelp(nil)
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 sortMenu
             }
@@ -62,6 +71,9 @@ struct HomeView: View {
         }
         .sheet(isPresented: $isSettingsPresented) {
             SettingsView()
+        }
+        .sheet(isPresented: $isHelpPresented) {
+            HelpSheet(initialTopic: helpTopic)
         }
         .sheet(item: $detailGame, onDismiss: {
             if let game = pendingPlay {
@@ -97,6 +109,9 @@ struct HomeView: View {
             if let state = viewModel.importState {
                 ImportStatusView(state: state) {
                     viewModel.importState = nil
+                } onHelp: {
+                    viewModel.importState = nil
+                    showHelp(.troubleshooting)
                 }
             }
         }
@@ -144,6 +159,9 @@ struct HomeView: View {
             let arguments = ProcessInfo.processInfo.arguments
             isSettingsPresented = arguments.contains("-showSettings")
             if arguments.contains("-showDetail") { detailGame = viewModel.projects.first }
+            if let index = arguments.firstIndex(of: "-showGuide") {
+                showHelp(arguments.indices.contains(index + 1) ? GuideTopic(rawValue: arguments[index + 1]) : nil)
+            }
             if let index = arguments.firstIndex(of: "-autoplay") {
                 let name = arguments.indices.contains(index + 1) ? arguments[index + 1] : ""
                 playingGame = viewModel.projects.first {
@@ -172,6 +190,11 @@ struct HomeView: View {
             sessionGame = game
             playingGame = game
         }
+    }
+
+    private func showHelp(_ topic: GuideTopic?) {
+        helpTopic = topic
+        isHelpPresented = true
     }
 
     private func importGame(from url: URL) {

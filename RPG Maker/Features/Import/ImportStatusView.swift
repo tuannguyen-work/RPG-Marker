@@ -11,6 +11,7 @@ import SwiftUI
 struct ImportStatusView: View {
     let state: HomeViewModel.ImportState
     let onDismiss: () -> Void
+    var onHelp: (() -> Void)?
 
     var body: some View {
         ZStack {
@@ -50,6 +51,12 @@ struct ImportStatusView: View {
                         Text("OK").frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.pixel)
+                    if let onHelp {
+                        Button(action: onHelp) {
+                            Text("Get Help").frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.pixelSecondary)
+                    }
                 }
             }
             .padding(24)

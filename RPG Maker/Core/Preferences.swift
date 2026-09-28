@@ -14,6 +14,7 @@ nonisolated enum PreferenceKey {
     static let hapticsEnabled = "haptics.enabled"
     static let librarySort = "library.sort"
     static let iCloudSaves = "saves.iCloud"
+    static let hasSeenControlsGuide = "guide.controlsSeen"
 }
 
 /// Size of the on-screen controls, as a scale of the default layout.

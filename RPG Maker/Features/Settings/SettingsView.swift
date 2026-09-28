@@ -5,6 +5,7 @@
 //  Copyright (C) 2026 The RPG-Marker Authors. See AUTHORS.
 //
 
+import StoreKit
 import SwiftUI
 
 /// Controls, storage, about, legal notice, source code offer and third-party acknowledgements.
@@ -16,6 +17,8 @@ struct SettingsView: View {
     @AppStorage(PreferenceKey.controlsSize) private var controlsSize = ControlsSize.medium
     @AppStorage(PreferenceKey.hapticsEnabled) private var hapticsEnabled = true
     @AppStorage(PreferenceKey.iCloudSaves) private var iCloudSaves = true
+    @AppStorage(PreferenceKey.hasSeenControlsGuide) private var hasSeenControlsGuide = false
+    @Environment(\.requestReview) private var requestReview
 
     @State private var usage: StorageUsage?
     @State private var isClearingCache = false
@@ -23,6 +26,34 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
+                Section {
+                    NavigationLink {
+                        HelpCenterView()
+                    } label: {
+                        Label("Guide", systemImage: "book.fill")
+                    }
+                    Button {
+                        hasSeenControlsGuide = false
+                    } label: {
+                        Label("Show Controls Tips Again", systemImage: "hand.tap")
+                    }
+                    .disabled(!hasSeenControlsGuide)
+                    Link(destination: AppInfo.supportURL) {
+                        Label("Report a Problem", systemImage: "exclamationmark.bubble")
+                    }
+                    Button {
+                        requestReview()
+                    } label: {
+                        Label("Rate the App", systemImage: "star")
+                    }
+                } header: {
+                    Text("Help")
+                } footer: {
+                    if !hasSeenControlsGuide {
+                        Text("Tips appear the next time you play a game.")
+                    }
+                }
+
                 Section {
                     ControlsPreview(opacity: controlsOpacity, scale: controlsSize.scale)
                         .listRowInsets(EdgeInsets())
@@ -94,6 +125,9 @@ struct SettingsView: View {
                 .foregroundStyle(Theme.Colors.textSecondary)
 
                 Section {
+                    Link(destination: AppInfo.privacyPolicyURL) {
+                        Label("Privacy Policy", systemImage: "hand.raised")
+                    }
                     Link(destination: AppInfo.sourceCodeURL) {
                         Label("Source Code", systemImage: "chevron.left.forwardslash.chevron.right")
                     }
@@ -270,6 +304,8 @@ enum AppInfo {
 
     /// GPL source code offer: must point at the source of this exact release.
     static let sourceCodeURL = URL(string: "https://github.com/tuannguyen-work/RPG-Marker")!
+    static let supportURL = URL(string: "https://github.com/tuannguyen-work/RPG-Marker/issues")!
+    static let privacyPolicyURL = URL(string: "https://github.com/tuannguyen-work/RPG-Marker/blob/main/PRIVACY.md")!
 }
 
 #Preview {

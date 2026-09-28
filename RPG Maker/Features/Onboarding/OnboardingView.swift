@@ -26,7 +26,12 @@ struct OnboardingView: View {
         Page(
             image: .onboardingPlay,
             title: "Pick up where you left off",
-            message: "Play full screen in landscape with touch controls or a game controller."
+            message: "Play full screen in landscape with on-screen buttons made for your thumbs."
+        ),
+        Page(
+            image: .onboardingCloud,
+            title: "Saves that follow you",
+            message: "Progress syncs with iCloud, so you can continue on your iPad, and it survives re-importing a game."
         ),
     ]
 

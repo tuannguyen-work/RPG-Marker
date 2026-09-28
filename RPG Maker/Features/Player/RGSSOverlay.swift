@@ -66,6 +66,7 @@ final class RGSSSession {
 /// On-screen controls and pause menu laid over mkxp-z's window.
 struct RGSSOverlayView: View {
     @Bindable var session: RGSSSession
+    @AppStorage(PreferenceKey.hasSeenControlsGuide) private var hasSeenControlsGuide = false
 
     var body: some View {
         ZStack {
@@ -98,6 +99,12 @@ struct RGSSOverlayView: View {
                 .opacity(0.85)
             } else {
                 pauseMenu
+            }
+
+            if session.showsControls && !session.isPaused && !hasSeenControlsGuide {
+                ControlsGuideOverlay(turboTitle: "Dash", turboMeaning: "Hold while moving to run.") {
+                    hasSeenControlsGuide = true
+                }
             }
         }
         .preferredColorScheme(.dark)
