@@ -1,0 +1,27 @@
+diff --git a/src/video/uikit/SDL_uikitwindow.m b/src/video/uikit/SDL_uikitwindow.m
+index d696179..77f0180 100644
+--- a/src/video/uikit/SDL_uikitwindow.m
++++ b/src/video/uikit/SDL_uikitwindow.m
+@@ -212,7 +212,21 @@ int UIKit_CreateWindow(_THIS, SDL_Window *window)
+ 
+         /* ignore the size user requested, and make a fullscreen window */
+         /* !!! FIXME: can we have a smaller view? */
+-        UIWindow *uiwindow = [[SDL_uikitwindow alloc] initWithFrame:data.uiscreen.bounds];
++        /* Scene-based apps (all SwiftUI apps) never show a window without a scene:
++           attach ours to the app's active window scene when there is one. */
++        UIWindow *uiwindow = nil;
++        if (@available(iOS 13.0, tvOS 13.0, *)) {
++            for (UIScene *scene in [UIApplication sharedApplication].connectedScenes) {
++                if ([scene isKindOfClass:[UIWindowScene class]] &&
++                    scene.activationState == UISceneActivationStateForegroundActive) {
++                    uiwindow = [[SDL_uikitwindow alloc] initWithWindowScene:(UIWindowScene *)scene];
++                    break;
++                }
++            }
++        }
++        if (uiwindow == nil) {
++            uiwindow = [[SDL_uikitwindow alloc] initWithFrame:data.uiscreen.bounds];
++        }
+ 
+         /* put the window on an external display if appropriate. */
+         if (data.uiscreen != [UIScreen mainScreen]) {

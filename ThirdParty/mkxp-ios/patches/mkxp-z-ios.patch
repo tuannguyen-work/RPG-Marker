@@ -1,0 +1,39 @@
+diff --git a/ios/binding-mri-ios.cpp b/ios/binding-mri-ios.cpp
+index 1da3b5c..f11e66d 100644
+--- a/ios/binding-mri-ios.cpp
++++ b/ios/binding-mri-ios.cpp
+@@ -5036,7 +5036,7 @@ static void mriBindingExecute() {
+         // We use the volatile stack_anchor_start declared at the top of this function.
+         MKXP_DEBUG_LOG("About to call ruby_init_stack with stack anchor at %p...\n", 
+                 (void*)&stack_anchor_start);
+-        ruby_init_stack((void*)&stack_anchor_start);
++        ruby_init_stack((volatile VALUE *)&stack_anchor_start);
+         MKXP_DEBUG_LOG("ruby_init_stack completed");
+         
+         MKXP_DEBUG_LOG("About to call ruby_init...");
+@@ -5056,7 +5056,7 @@ static void mriBindingExecute() {
+         MKXP_DEBUG_LOG("Ruby already initialized, skipping init calls");
+         // Even when reusing Ruby, we need to ensure the stack is properly anchored
+         // This is important for proper GC behavior across game launches
+-        ruby_init_stack((void*)&stack_anchor_start);
++        ruby_init_stack((volatile VALUE *)&stack_anchor_start);
+     }
+     
+     MKXP_DEBUG_LOG("About to call ruby_options...");
+diff --git a/ios/filesystemImplApple-ios.mm b/ios/filesystemImplApple-ios.mm
+index 8fdb9c2..6bdd29f 100644
+--- a/ios/filesystemImplApple-ios.mm
++++ b/ios/filesystemImplApple-ios.mm
+@@ -81,8 +81,10 @@
+ 
+ std::string filesystemImpl::getDefaultGameRoot() {
+     @autoreleasepool {
+-        // On iOS, the game root is typically the Documents/Games folder
+-        // For now, return the bundle's main resource path
++        // Set by the host app to the folder of the game it is about to run.
++        if (const char *root = getenv("MKXPZ_GAME_ROOT")) {
++            return std::string(root);
++        }
+         return std::string(NSTOPATH(NSBundle.mainBundle.resourcePath));
+     }
+ }

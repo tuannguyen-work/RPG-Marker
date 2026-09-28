@@ -91,11 +91,15 @@ struct HomeView: View {
         .fullScreenCover(item: $playingGame, onDismiss: {
             Task { await viewModel.load() }
         }) { game in
-            PlayerView(viewModel: PlayerViewModel(
-                game: game,
-                directories: dependencies.directories,
-                repository: dependencies.projectRepository
-            ))
+            if game.engine.usesWebRuntime {
+                PlayerView(viewModel: PlayerViewModel(
+                    game: game,
+                    directories: dependencies.directories,
+                    repository: dependencies.projectRepository
+                ))
+            } else {
+                RGSSPlayerView(game: game, directories: dependencies.directories, repository: dependencies.projectRepository)
+            }
         }
         .task {
             await viewModel.load()

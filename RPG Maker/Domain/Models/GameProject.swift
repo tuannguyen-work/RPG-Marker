@@ -24,8 +24,12 @@ nonisolated enum GameEngine: String, Codable, Sendable, CaseIterable {
         }
     }
 
-    /// MV and MZ run in the built-in web runtime; XP/VX/VX Ace need the Ruby runtime (not yet included).
+    /// MV and MZ run in the web runtime; XP/VX/VX Ace in mkxp-z, when this build includes it.
     var isPlayable: Bool {
+        usesWebRuntime || MKXPIsAvailable()
+    }
+
+    var usesWebRuntime: Bool {
         self == .mv || self == .mz
     }
 }

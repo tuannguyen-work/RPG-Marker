@@ -9,16 +9,24 @@ the Files app and play it with touch controls or a game controller.
 
 ## Status
 
-Early development. Planned engine support: RPG Maker MV/MZ (web runtime),
-then XP/VX/VX Ace.
+Early development. RPG Maker MV/MZ run in a web runtime; XP/VX/VX Ace in mkxp-z
+(simulator only for now, no on-screen controls yet).
 
 ## Building
 
-Requirements: Xcode 26 or later.
+Requirements: Xcode 26 or later, Homebrew `cmake meson ninja autoconf automake libtool pkg-config`,
+and a Ruby on the Mac (used to cross-compile Ruby).
 
-1. Open `RPG Maker.xcodeproj`.
-2. Select the `RPG Maker` scheme and an iOS Simulator or device.
-3. Build and run.
+RPG Maker XP/VX/VX Ace games run in [mkxp-z](https://github.com/mkxp-z/mkxp-z), which is built
+from source with its dependencies. Do this once before building for the simulator (about 40 min):
+
+```sh
+make -C ThirdParty/mkxp-deps everything      # SDL, OpenAL, Ruby, … → ~/Library/Caches/RPGMarker
+ThirdParty/mkxp-ios/build.sh                 # mkxp-z → ThirdParty/Build + Runtime/MKXP/Assets.bundle
+```
+
+Then open `RPG Maker.xcodeproj`, pick the `RPG Maker` scheme and an iOS Simulator, and run.
+Device builds don't include mkxp-z yet (XP/VX/VX Ace games show as not playable there).
 
 ## Project structure
 
