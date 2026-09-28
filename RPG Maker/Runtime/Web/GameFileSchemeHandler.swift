@@ -83,6 +83,15 @@ final class GameFileSchemeHandler: NSObject, WKURLSchemeHandler {
                 let headers = ["Content-Type": "image/png", "Content-Length": String(png.count), "Access-Control-Allow-Origin": "*"]
                 return .success((HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: headers)!, png))
             }
+            // A plugin listed in plugins.js but missing from the game (often paid plugins left out of
+            // a shared copy) would stop the whole game with "Failed to load". Skip it instead.
+            if path.lowercased().hasPrefix("/js/plugins/"), path.lowercased().hasSuffix(".js") {
+                Logger.runtime.error("Missing plugin skipped: \(path, privacy: .public)")
+                DebugLog.write("[missing plugin skipped] \(path)")
+                let script = Data("// Plugin file missing from this game; skipped by the player.\n".utf8)
+                let headers = ["Content-Type": "text/javascript", "Content-Length": String(script.count)]
+                return .success((HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: headers)!, script))
+            }
             Logger.runtime.debug("404 \(path, privacy: .public)")
             DebugLog.write("[404] \(path)")
             return .success((HTTPURLResponse(url: url, statusCode: 404, httpVersion: "HTTP/1.1", headerFields: nil)!, Data()))
