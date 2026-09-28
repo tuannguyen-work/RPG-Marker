@@ -44,7 +44,7 @@ nonisolated enum OggTranscoder {
         var sampleRate: Int32 = 0
         var samples: UnsafeMutablePointer<Int16>?
         let frames = ogg.withUnsafeBytes { buffer in
-            stb_vorbis_decode_memory(buffer.bindMemory(to: UInt8.self).baseAddress, Int32(buffer.count), &channels, &sampleRate, &samples)
+            qp_stb_vorbis_decode_memory(buffer.bindMemory(to: UInt8.self).baseAddress, Int32(buffer.count), &channels, &sampleRate, &samples)
         }
         guard frames > 0, let samples, channels > 0 else { throw Failure.decodingFailed }
         defer { free(samples) }
