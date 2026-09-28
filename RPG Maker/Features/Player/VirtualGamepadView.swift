@@ -20,6 +20,8 @@ enum GamepadButton: Hashable, Sendable {
 struct VirtualGamepadView: View {
     /// True when the game fills the screen behind the controls; they fade so the game stays readable.
     var coversGame = false
+    /// The small button next to Menu: fast-forward for MV/MZ, dash for XP/VX/VX Ace.
+    var turboTitle: LocalizedStringKey = "Turbo"
     var onChange: (GamepadButton, _ isPressed: Bool) -> Void
 
     /// Width each side needs for the controls not to overlap the game.
@@ -39,7 +41,7 @@ struct VirtualGamepadView: View {
             let dpadX = edgeInset + DPadView.size / 2
             DPadView(onChange: onChange)
                 .position(x: dpadX, y: thumbY)
-            SmallPadButton(title: "Turbo", button: .turbo, onChange: onChange)
+            SmallPadButton(title: turboTitle, button: .turbo, onChange: onChange)
                 .position(x: dpadX, y: thumbY - DPadView.size / 2 - 34)
 
             // Right thumb: A (used most) on the resting point, B down and inward like a SNES pad,
