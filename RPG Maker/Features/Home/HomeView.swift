@@ -50,12 +50,12 @@ struct HomeView: View {
         .searchable(text: $viewModel.searchText, prompt: "Search Games")
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button("Settings", systemImage: "gearshape") {
+                Button("Settings", image: .iconSettings) {
                     isSettingsPresented = true
                 }
             }
             ToolbarItem(placement: .topBarLeading) {
-                Button("Guide", systemImage: "questionmark.circle") {
+                Button("Guide", image: .iconHelp) {
                     showHelp(nil)
                 }
             }
@@ -63,7 +63,7 @@ struct HomeView: View {
                 sortMenu
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Import Game", systemImage: "plus") {
+                Button("Import Game", image: .iconAdd) {
                     isFilePickerPresented = true
                 }
                 .disabled(viewModel.importState != nil)
@@ -214,7 +214,7 @@ struct HomeView: View {
                 }
             }
         } label: {
-            Label("Sort", systemImage: "arrow.up.arrow.down")
+            Label("Sort", image: .iconSort)
         }
         .disabled(viewModel.projects.count < 2)
     }
