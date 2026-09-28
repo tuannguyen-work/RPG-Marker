@@ -27,22 +27,24 @@ struct VirtualGamepadView: View {
     /// Width each side needs for the controls not to overlap the game.
     static let sideBarWidth: CGFloat = 170
 
-    /// From the screen edge; clears the Dynamic Island, which can be on either side.
-    private let edgeInset: CGFloat = 44
+    /// From the screen edge: clears the Dynamic Island (either side) and keeps the buttons under
+    /// the thumbs rather than at the very edge.
+    private let edgeInset: CGFloat = 60
     /// Thumb resting height, as a fraction of the screen height.
-    private let thumbLine: CGFloat = 0.62
+    private let thumbLine: CGFloat = 0.6
 
     var body: some View {
         GeometryReader { geometry in
             let width = geometry.size.width
             let thumbY = geometry.size.height * thumbLine
 
-            // Left thumb: D-pad on the resting point, the rarely used Turbo above it.
-            let dpadX = edgeInset + DPadView.size / 2
-            DPadView(onChange: onChange)
+            // Left thumb: direction buttons on the resting point, the rarely used Turbo above them.
+            // The direction cross is wide, so it sits a little closer to the edge than the A/B side.
+            let dpadX = edgeInset - 10 + DirectionPad.size / 2
+            DirectionPad(onChange: onChange)
                 .position(x: dpadX, y: thumbY)
             SmallPadButton(title: turboTitle, button: .turbo, onChange: onChange)
-                .position(x: dpadX, y: thumbY - DPadView.size / 2 - 34)
+                .position(x: dpadX, y: thumbY - DirectionPad.size / 2 - 30)
 
             // Right thumb: A (used most) on the resting point, B down and inward like a SNES pad,
             // Menu above within a short stretch.
@@ -59,52 +61,71 @@ struct VirtualGamepadView: View {
     }
 }
 
-private struct DPadView: View {
+/// Four separate direction buttons in a cross. One gesture covers the whole cross, so the thumb
+/// can slide from one button to the next; the corners between two buttons press both (diagonal).
+private struct DirectionPad: View {
     let onChange: (GamepadButton, Bool) -> Void
 
     @State private var pressed: Set<GamepadButton> = []
-    static let size: CGFloat = 124
-    /// Touches this far outside the drawn pad still count, so a drifting thumb keeps control.
-    private static let slack: CGFloat = 16
-    private let deadZone: CGFloat = 14
-    private var hitSize: CGFloat { Self.size + 2 * Self.slack }
+
+    private static let button: CGFloat = 56
+    private static let gap: CGFloat = 4
+    /// Cell size of the 3×3 grid the buttons sit in.
+    private static let cell: CGFloat = button + gap
+    static let size: CGFloat = 3 * cell
+    /// Touches this far outside the cross still count, so a drifting thumb keeps control.
+    private static let slack: CGFloat = 14
 
     var body: some View {
-        Image(.padDpad)
-            .resizable()
-            .frame(width: Self.size, height: Self.size)
-            .offset(tilt)
-            .frame(width: hitSize, height: hitSize)
-            .contentShape(Rectangle())
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { update(to: directions(at: $0.location)) }
-                    .onEnded { _ in update(to: []) }
-            )
-            .sensoryFeedback(.impact(weight: .light), trigger: pressed)
-            .accessibilityElement()
-            .accessibilityLabel("Directional pad")
-    }
-
-    /// Shift the pad slightly toward the pressed direction.
-    private var tilt: CGSize {
-        CGSize(
-            width: (pressed.contains(.right) ? 2 : 0) - (pressed.contains(.left) ? 2 : 0),
-            height: (pressed.contains(.down) ? 2 : 0) - (pressed.contains(.up) ? 2 : 0)
+        ZStack {
+            arrow(.up, rotation: 0).offset(y: -Self.cell)
+            arrow(.right, rotation: 90).offset(x: Self.cell)
+            arrow(.down, rotation: 180).offset(y: Self.cell)
+            arrow(.left, rotation: 270).offset(x: -Self.cell)
+        }
+        .frame(width: Self.size + 2 * Self.slack, height: Self.size + 2 * Self.slack)
+        .contentShape(Rectangle())
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { update(to: directions(at: $0.location)) }
+                .onEnded { _ in update(to: []) }
         )
+        .sensoryFeedback(.impact(weight: .light), trigger: pressed)
+        .accessibilityElement()
+        .accessibilityLabel("Directional pad")
     }
 
-    /// Up to two directions (diagonals), split into 45° sectors around the center.
+    private func arrow(_ direction: GamepadButton, rotation: Double) -> some View {
+        let isPressed = pressed.contains(direction)
+        return PixelArrow()
+            .fill(isPressed ? Theme.Colors.ember : Theme.Colors.textPrimary)
+            .frame(width: 20, height: 15)
+            .rotationEffect(.degrees(rotation))
+            .frame(width: Self.button, height: Self.button)
+            .background {
+                Image(.padButtonSmall)
+                    .resizable(capInsets: EdgeInsets(top: 19, leading: 20, bottom: 19, trailing: 20), resizingMode: .stretch)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Theme.Colors.ember.opacity(isPressed ? 0.3 : 0))
+                            .padding(3)
+                    }
+            }
+            .offset(y: isPressed ? 1 : 0)
+    }
+
+    /// The 3×3 cell under the finger: edges are single directions, corners diagonals, center none.
     private func directions(at location: CGPoint) -> Set<GamepadButton> {
-        let dx = location.x - hitSize / 2
-        let dy = location.y - hitSize / 2
-        guard hypot(dx, dy) > deadZone else { return [] }
-        let angle = atan2(-dy, dx) * 180 / .pi  // 0° = right, 90° = up
+        func index(_ value: CGFloat) -> Int {
+            min(max(Int((value - Self.slack) / Self.cell), 0), 2)
+        }
+        let column = index(location.x)
+        let row = index(location.y)
         var result: Set<GamepadButton> = []
-        if abs(angle) < 67.5 { result.insert(.right) }
-        if abs(angle) > 112.5 { result.insert(.left) }
-        if angle > 22.5 && angle < 157.5 { result.insert(.up) }
-        if angle < -22.5 && angle > -157.5 { result.insert(.down) }
+        if row == 0 { result.insert(.up) }
+        if row == 2 { result.insert(.down) }
+        if column == 0 { result.insert(.left) }
+        if column == 2 { result.insert(.right) }
         return result
     }
 
@@ -113,6 +134,21 @@ private struct DPadView: View {
         for button in pressed.subtracting(new) { onChange(button, false) }
         for button in new.subtracting(pressed) { onChange(button, true) }
         pressed = new
+    }
+}
+
+/// Upward pointing triangle drawn in pixel steps, matching the pixel-art buttons.
+private struct PixelArrow: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let rows = 4
+        let step = rect.height / CGFloat(rows)
+        for row in 0..<rows {
+            // Each row is wider than the one above, centered: a stepped triangle.
+            let width = rect.width * CGFloat(row + 1) / CGFloat(rows)
+            path.addRect(CGRect(x: rect.midX - width / 2, y: rect.minY + CGFloat(row) * step, width: width, height: step))
+        }
+        return path
     }
 }
 
