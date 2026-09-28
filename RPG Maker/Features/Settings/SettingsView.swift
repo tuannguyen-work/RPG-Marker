@@ -105,8 +105,32 @@ struct Acknowledgement: Identifiable {
     let licenseResource: String
     var id: String { name }
 
-    static let all = [
-        Acknowledgement(name: "stb_vorbis", license: "MIT", licenseResource: "License-stb_vorbis"),
+    static var all: [Acknowledgement] {
+        let base = [
+            Acknowledgement(name: "stb_vorbis", license: "MIT", licenseResource: "License-stb_vorbis"),
+        ]
+        return MKXPIsAvailable() ? base + rgssRuntime : base
+    }
+
+    /// The RPG Maker XP / VX / VX Ace runtime and what it bundles (ThirdParty/).
+    private static let rgssRuntime = [
+        Acknowledgement(name: "mkxp-z", license: "GPL-2.0-or-later", licenseResource: "License-mkxp-z"),
+        Acknowledgement(name: "Ruby", license: "Ruby / BSD-2-Clause", licenseResource: "License-Ruby"),
+        Acknowledgement(name: "SDL", license: "zlib", licenseResource: "License-SDL2"),
+        Acknowledgement(name: "SDL_image", license: "zlib", licenseResource: "License-SDL_image"),
+        Acknowledgement(name: "SDL_sound", license: "zlib", licenseResource: "License-SDL_sound"),
+        Acknowledgement(name: "SDL_ttf", license: "zlib", licenseResource: "License-SDL_ttf"),
+        Acknowledgement(name: "OpenAL Soft", license: "LGPL-2.0-or-later", licenseResource: "License-OpenAL-Soft"),
+        Acknowledgement(name: "FluidSynth", license: "LGPL-2.1-or-later", licenseResource: "License-FluidSynth"),
+        Acknowledgement(name: "PhysicsFS", license: "zlib", licenseResource: "License-PhysFS"),
+        Acknowledgement(name: "pixman", license: "MIT", licenseResource: "License-pixman"),
+        Acknowledgement(name: "FreeType", license: "FreeType License", licenseResource: "License-FreeType"),
+        Acknowledgement(name: "libpng", license: "libpng License", licenseResource: "License-libpng"),
+        Acknowledgement(name: "uchardet", license: "MPL-1.1 / GPL / LGPL", licenseResource: "License-uchardet"),
+        Acknowledgement(name: "Ogg, Vorbis, Theora", license: "BSD-3-Clause", licenseResource: "License-Xiph"),
+        Acknowledgement(name: "Liberation Sans", license: "SIL OFL 1.1", licenseResource: "License-Liberation"),
+        Acknowledgement(name: "WenQuanYi Micro Hei", license: "Apache-2.0", licenseResource: "License-WenQuanYi"),
+        Acknowledgement(name: "GeneralUser GS (MIDI sounds)", license: "GeneralUser GS License", licenseResource: "License-GeneralUser-GS"),
     ]
 }
 

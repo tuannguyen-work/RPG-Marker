@@ -19,6 +19,8 @@ license text in `Resources/Licenses/`.
 | [libpng](https://github.com/pnggroup/libpng) | 1.6.50 | libpng License | PNG decoding | Notice |
 | [uchardet](https://gitlab.freedesktop.org/uchardet/uchardet) | 0.0.8 | MPL-1.1 / GPL-2.0+ / LGPL-2.1+ (we use GPL-2.0+) | Text encoding detection | — |
 | [libogg, libvorbis, libtheora](https://github.com/xiph) | 1.3.6 / 1.3.7 / 1.2.0 | BSD-3-Clause | Ogg audio and video | Notice |
+| [FluidSynth](https://github.com/FluidSynth/fluidsynth) | 2.6.1 | LGPL-2.1-or-later | MIDI synthesis for mkxp-z | Combined work is GPL; source and build scripts published |
+| [GeneralUser GS](https://github.com/mrbumpy409/GeneralUser-GS) | 2.0.3 | GeneralUser GS License v2.0 (permissive) | Default MIDI soundfont | Keep license text |
 | Liberation Sans (bundled by mkxp-z) | — | SIL OFL 1.1 | Default game font | Keep license with the font |
 | WenQuanYi Micro Hei (bundled by mkxp-z) | — | Apache-2.0 or GPL-3.0 | CJK fallback font | Notice |
 
@@ -33,5 +35,3 @@ license text in `Resources/Licenses/`.
 - Build mkxp-z with `enable-https` / OpenSSL **disabled**.
 - Never bundle RPG Maker RTP files, fonts, or games owned by others.
 
-The XP/VX/VX Ace entries above are not yet listed in the in-app Acknowledgements screen; that must
-happen before a release that includes mkxp-z.

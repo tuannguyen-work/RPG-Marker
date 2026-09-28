@@ -258,15 +258,15 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Config/Info.plist;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64; /* mkxp-z is built for arm64 only */
-				"GCC_PREPROCESSOR_DEFINITIONS[sdk=iphonesimulator*]" = (
+				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"MKXPZ_AVAILABLE=1",
 				);
-				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = (
+				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(SRCROOT)/ThirdParty/Build/iphonesimulator",
+					"$(SRCROOT)/ThirdParty/Build/$(PLATFORM_NAME)",
 				);
-				"OTHER_LDFLAGS[sdk=iphonesimulator*]" = (
+				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-lmkxpz-all",
 					"-lc++",
@@ -337,15 +337,15 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Config/Info.plist;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64; /* mkxp-z is built for arm64 only */
-				"GCC_PREPROCESSOR_DEFINITIONS[sdk=iphonesimulator*]" = (
+				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"MKXPZ_AVAILABLE=1",
 				);
-				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = (
+				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(SRCROOT)/ThirdParty/Build/iphonesimulator",
+					"$(SRCROOT)/ThirdParty/Build/$(PLATFORM_NAME)",
 				);
-				"OTHER_LDFLAGS[sdk=iphonesimulator*]" = (
+				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-lmkxpz-all",
 					"-lc++",

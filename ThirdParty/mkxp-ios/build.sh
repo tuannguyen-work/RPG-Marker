@@ -35,7 +35,7 @@ cmake --install $BUILD
 OUT="$HERE/../Build/$PLATFORM"
 mkdir -p "$OUT"
 LIBS=(mkxpz ruby-static SDL2 SDL2_image SDL2_sound SDL2_ttf openal physfs pixman-1 freetype png16 uchardet
-      theora vorbis vorbisfile ogg)
+      theora vorbis vorbisfile ogg fluidsynth)
 xcrun libtool -static -no_warning_for_no_symbols -o "$OUT/libmkxpz-all.a" $(for l in $LIBS; do print -r -- "$DEPS/lib/lib$l.a"; done)
 echo "Wrote $OUT/libmkxpz-all.a"
 
@@ -47,4 +47,13 @@ mkdir -p "$ASSETS/Shaders"
 cp "$SOURCE"/shader/* "$ASSETS/Shaders/"
 cp "$SOURCE"/assets/*.ttf "$SOURCE"/assets/icon.png "$ASSETS/"
 [[ -f "$SOURCE/assets/gamecontrollerdb.txt" ]] && cp "$SOURCE/assets/gamecontrollerdb.txt" "$ASSETS/"
+
+# Default MIDI soundfont: GeneralUser GS (permissive license, see documentation/LICENSE.txt).
+SOUNDFONT_REVISION=97049183643d5fc5a9322a69c5b09efb667c6c3a  # GeneralUser GS v2.0.3
+SOUNDFONT=$CACHE/GeneralUser-GS.sf2
+if [[ ! -f $SOUNDFONT ]]; then
+    curl -fsSL -o $SOUNDFONT "https://raw.githubusercontent.com/mrbumpy409/GeneralUser-GS/$SOUNDFONT_REVISION/GeneralUser-GS.sf2"
+    curl -fsSL -o $CACHE/GeneralUser-GS-LICENSE.txt "https://raw.githubusercontent.com/mrbumpy409/GeneralUser-GS/$SOUNDFONT_REVISION/documentation/LICENSE.txt"
+fi
+cp $SOUNDFONT $CACHE/GeneralUser-GS-LICENSE.txt "$ASSETS/"
 echo "Wrote $ASSETS"

@@ -37,3 +37,35 @@ index 8fdb9c2..6bdd29f 100644
          return std::string(NSTOPATH(NSBundle.mainBundle.resourcePath));
      }
  }
+diff --git a/src/audio/fluid-fun.cpp b/src/audio/fluid-fun.cpp
+index 0f66c96..c683eb4 100644
+--- a/src/audio/fluid-fun.cpp
++++ b/src/audio/fluid-fun.cpp
+@@ -2,7 +2,10 @@
+ #include <TargetConditionals.h>
+ #endif
+ 
+-#if TARGET_OS_IPHONE
++#if TARGET_OS_IPHONE && defined(SHARED_FLUID)
++// FluidSynth linked statically into the app
++#define FLUID_LIB "static"
++#elif TARGET_OS_IPHONE
+ // No fluidsynth library available for iOS - MIDI playback disabled
+ #define MKXPZ_NO_FLUIDSYNTH 1
+ #define FLUID_LIB "dummy"
+diff --git a/src/config.cpp b/src/config.cpp
+index ca43994..99002f4 100644
+--- a/src/config.cpp
++++ b/src/config.cpp
+@@ -326,6 +326,11 @@ try { exp } catch (...) {}
+     SET_OPT(enableReset, boolean);
+     SET_OPT(enableSettings, boolean);
+     SET_STRINGOPT(midi.soundFont, midiSoundFont);
++    // The host app can supply a default soundfont for games that don't name one.
++    if (midi.soundFont.empty()) {
++        if (const char *soundFont = SDL_getenv("MKXPZ_SOUNDFONT"))
++            midi.soundFont = soundFont;
++    }
+     SET_OPT_CUSTOMKEY(midi.chorus, midiChorus, boolean);
+     SET_OPT_CUSTOMKEY(midi.reverb, midiReverb, boolean);
+     SET_OPT_CUSTOMKEY(SE.sourceCount, SESourceCount, integer);

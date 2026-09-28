@@ -46,6 +46,7 @@ add_compile_definitions(
     IOS_PLATFORM
     MKXPZ_MINIFFI  # Enable Win32API module
     MKXPZ_NO_SYSTEM_CALL  # Disable std::system() calls on iOS
+    SHARED_FLUID  # FluidSynth linked statically (MIDI)
 )
 
 # ====================

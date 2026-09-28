@@ -97,6 +97,9 @@ static void installOverlay(void) {
 static int runGame(const char *gameRoot) {
     if (const char *level = getenv("MKXPZ_LOG_LEVEL")) g_mkxpz_log_level = atoi(level);
     setenv("MKXPZ_GAME_ROOT", gameRoot, 1);
+    // MIDI soundfont for games that don't name one (built into Assets.bundle by build.sh).
+    NSString *soundFont = [NSBundle.mainBundle pathForResource:@"GeneralUser-GS" ofType:@"sf2" inDirectory:@"Assets.bundle"];
+    if (soundFont) setenv("MKXPZ_SOUNDFONT", soundFont.fileSystemRepresentation, 1);
     static char name[] = "mkxp-z";
     char *argv[] = { name, NULL };
 

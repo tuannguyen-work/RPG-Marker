@@ -155,6 +155,16 @@ $(LIBDIR)/libopenal.a: | $(DOWNLOADS)/openal
 $(DOWNLOADS)/openal:
 	$(CLONE) $(GITHUB)/kcat/openal-soft -b 1.24.3 $@
 
+# ---- MIDI: FluidSynth, synthesizer only (mkxp-z renders it into OpenAL). No GLib: osal=cpp11.
+FLUIDSYNTH_OFF := alsa aufile dbus ipv6 jack ladspa libsndfile midishare network oss sdl3 pulseaudio \
+	pipewire readline openmp systemd coreaudio coremidi framework native-dls
+fluidsynth: init_dirs $(LIBDIR)/libfluidsynth.a
+$(LIBDIR)/libfluidsynth.a: | $(DOWNLOADS)/fluidsynth
+	cd $(DOWNLOADS)/fluidsynth && mkdir -p cmakebuild && cd cmakebuild && $(CMAKE) -Dosal=cpp11 -DCMAKE_MACOSX_BUNDLE=OFF \
+		$(foreach option,$(FLUIDSYNTH_OFF),-Denable-$(option)=off) && make -j$(NPROC) install
+$(DOWNLOADS)/fluidsynth:
+	$(CLONE) --recurse-submodules --shallow-submodules $(GITHUB)/FluidSynth/fluidsynth -b v2.6.1 $@
+
 # ---- Ruby (mkxp-z's 3.1 branch), static, extensions linked in, no JIT (not allowed on iOS).
 # Cross-compiling needs a Ruby on the Mac to run the build scripts (BASERUBY).
 # CC carries the target flags too: Ruby's assembly (coroutine/arm64/Context.S) doesn't get CFLAGS.
@@ -187,7 +197,7 @@ init_dirs:
 clean:
 	rm -rf $(BUILD_PREFIX)
 
-deps-core: libogg libvorbis libtheora uchardet libpng pixman physfs freetype sdl2 sdl2image sdlsound sdl2ttf openal
+deps-core: libogg libvorbis libtheora uchardet libpng pixman physfs freetype sdl2 sdl2image sdlsound sdl2ttf openal fluidsynth
 everything: deps-core ruby
 
-.PHONY: default init_dirs clean deps-core everything ruby libogg libvorbis libtheora uchardet libpng pixman physfs freetype sdl2 sdl2image sdlsound sdl2ttf openal
+.PHONY: default init_dirs clean deps-core everything ruby fluidsynth libogg libvorbis libtheora uchardet libpng pixman physfs freetype sdl2 sdl2image sdlsound sdl2ttf openal
