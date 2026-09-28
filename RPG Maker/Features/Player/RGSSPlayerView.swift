@@ -80,7 +80,7 @@ struct RGSSPlayerView: View {
 /// RGSS games write their saves (Save01.rvdata2, Save1.rxdata, …) next to Game.ini, inside the game
 /// folder, which is excluded from backups and removed with the game. They are kept in Saves/<id>
 /// and copied in before playing and back out afterwards.
-struct RGSSSaveSync {
+nonisolated struct RGSSSaveSync {
     let gameRoot: URL
     let saveDirectory: URL
 
@@ -91,10 +91,21 @@ struct RGSSSaveSync {
     }
 
     func collect() {
-        copy(from: gameRoot, to: saveDirectory) { url in
-            url.lastPathComponent.lowercased().hasPrefix("save")
-                && Self.saveExtensions.contains(url.pathExtension.lowercased())
+        copy(from: gameRoot, to: saveDirectory, where: Self.isSaveFile)
+    }
+
+    /// Deletes every save, including the copies inside the game folder.
+    func removeAll() {
+        let fileManager = FileManager.default
+        try? fileManager.removeItem(at: saveDirectory)
+        let files = (try? fileManager.contentsOfDirectory(at: gameRoot, includingPropertiesForKeys: nil)) ?? []
+        for file in files where Self.isSaveFile(file) {
+            try? fileManager.removeItem(at: file)
         }
+    }
+
+    static func isSaveFile(_ url: URL) -> Bool {
+        url.lastPathComponent.lowercased().hasPrefix("save") && saveExtensions.contains(url.pathExtension.lowercased())
     }
 
     private func copy(from source: URL, to destination: URL, where include: (URL) -> Bool) {

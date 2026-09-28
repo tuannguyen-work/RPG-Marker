@@ -25,7 +25,11 @@ nonisolated enum OggTranscoder {
         case decodingFailed
     }
 
-    private static let cacheDirectory = URL.cachesDirectory.appending(path: "TranscodedAudio", directoryHint: .isDirectory)
+    static let cacheDirectory = URL.cachesDirectory.appending(path: "TranscodedAudio", directoryHint: .isDirectory)
+
+    static func clearCache() {
+        try? FileManager.default.removeItem(at: cacheDirectory)
+    }
 
     static func wav(fromOgg url: URL) throws -> Output {
         try wav(fromOgg: Data(contentsOf: url, options: .mappedIfSafe), identity: url)

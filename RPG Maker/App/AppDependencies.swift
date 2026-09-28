@@ -15,11 +15,13 @@ final class AppDependencies {
     let directories: AppDirectories
     let projectRepository: any ProjectRepository
     let gameImporter: GameImporter
+    let cloudSaves: CloudSaves
 
     init(directories: AppDirectories, projectRepository: any ProjectRepository) {
         self.directories = directories
         self.projectRepository = projectRepository
         self.gameImporter = GameImporter(directories: directories, repository: projectRepository)
+        self.cloudSaves = CloudSaves(directories: directories)
     }
 
     static var live: AppDependencies {

@@ -33,30 +33,40 @@ struct VirtualGamepadView: View {
     /// Thumb resting height, as a fraction of the screen height.
     private let thumbLine: CGFloat = 0.6
 
+    @AppStorage(PreferenceKey.controlsOpacity) private var opacity = 0.9
+    @AppStorage(PreferenceKey.controlsSize) private var size = ControlsSize.medium
+
     var body: some View {
         GeometryReader { geometry in
             let width = geometry.size.width
             let thumbY = geometry.size.height * thumbLine
+            // Scaling keeps each group anchored on its thumb point; gestures scale with the drawing.
+            let scale = size.scale
 
             // Left thumb: direction buttons on the resting point, the rarely used Turbo above them.
             // The direction cross is wide, so it sits a little closer to the edge than the A/B side.
-            let dpadX = edgeInset - 10 + DirectionPad.size / 2
+            let dpadX = edgeInset - 10 + DirectionPad.size * scale / 2
             DirectionPad(onChange: onChange)
+                .scaleEffect(scale)
                 .position(x: dpadX, y: thumbY)
             SmallPadButton(title: turboTitle, button: .turbo, onChange: onChange)
-                .position(x: dpadX, y: thumbY - DirectionPad.size / 2 - 30)
+                .scaleEffect(scale)
+                .position(x: dpadX, y: thumbY - (DirectionPad.size / 2 + 30) * scale)
 
             // Right thumb: A (used most) on the resting point, B down and inward like a SNES pad,
             // Menu above within a short stretch.
-            let aX = width - edgeInset - RoundPadButton.size / 2
+            let aX = width - edgeInset - RoundPadButton.size * scale / 2
             RoundPadButton(title: "A", button: .confirm, onChange: onChange)
-                .position(x: aX, y: thumbY - 12)
+                .scaleEffect(scale)
+                .position(x: aX, y: thumbY - 12 * scale)
             RoundPadButton(title: "B", button: .cancel, onChange: onChange)
-                .position(x: aX - 66, y: thumbY + 38)
+                .scaleEffect(scale)
+                .position(x: aX - 66 * scale, y: thumbY + 38 * scale)
             SmallPadButton(title: "Menu", button: .menu, onChange: onChange)
-                .position(x: aX - 40, y: thumbY - 78)
+                .scaleEffect(scale)
+                .position(x: aX - 40 * scale, y: thumbY - 78 * scale)
         }
-        .opacity(coversGame ? 0.45 : 0.9)
+        .opacity(coversGame ? opacity * 0.5 : opacity)
         .animation(.easeInOut, value: coversGame)
     }
 }
@@ -67,6 +77,7 @@ private struct DirectionPad: View {
     let onChange: (GamepadButton, Bool) -> Void
 
     @State private var pressed: Set<GamepadButton> = []
+    @AppStorage(PreferenceKey.hapticsEnabled) private var hapticsEnabled = true
 
     private static let button: CGFloat = 56
     private static let gap: CGFloat = 4
@@ -90,7 +101,7 @@ private struct DirectionPad: View {
                 .onChanged { update(to: directions(at: $0.location)) }
                 .onEnded { _ in update(to: []) }
         )
-        .sensoryFeedback(.impact(weight: .light), trigger: pressed)
+        .sensoryFeedback(.impact(weight: .light), trigger: pressed) { _, _ in hapticsEnabled }
         .accessibilityElement()
         .accessibilityLabel("Directional pad")
     }
@@ -157,6 +168,7 @@ private struct HoldGesture: ViewModifier {
     let button: GamepadButton
     let onChange: (GamepadButton, Bool) -> Void
     @Binding var isPressed: Bool
+    @AppStorage(PreferenceKey.hapticsEnabled) private var hapticsEnabled = true
 
     func body(content: Content) -> some View {
         content
@@ -173,7 +185,7 @@ private struct HoldGesture: ViewModifier {
                         onChange(button, false)
                     }
             )
-            .sensoryFeedback(.impact(weight: .medium), trigger: isPressed) { _, new in new }
+            .sensoryFeedback(.impact(weight: .medium), trigger: isPressed) { _, new in new && hapticsEnabled }
             .accessibilityAddTraits(.isButton)
     }
 }

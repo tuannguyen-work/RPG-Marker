@@ -15,13 +15,16 @@ struct PixelButtonStyle: ButtonStyle {
     }
 
     var kind: Kind = .primary
+    /// Less side padding, for several buttons in one row.
+    var isCompact = false
 
     func makeBody(configuration: Configuration) -> some View {
         let isPressed = configuration.isPressed
         configuration.label
             .font(Theme.Fonts.headline)
             .foregroundStyle(kind == .primary ? Theme.Colors.background : Theme.Colors.textPrimary)
-            .padding(.horizontal, Theme.Spacing.lg)
+            .lineLimit(1)
+            .padding(.horizontal, isCompact ? Theme.Spacing.sm + 4 : Theme.Spacing.lg)
             .frame(minHeight: 48)
             .offset(y: isPressed ? 2 : 0)
             .background {
@@ -50,6 +53,7 @@ struct PixelButtonStyle: ButtonStyle {
 extension ButtonStyle where Self == PixelButtonStyle {
     static var pixel: PixelButtonStyle { PixelButtonStyle(kind: .primary) }
     static var pixelSecondary: PixelButtonStyle { PixelButtonStyle(kind: .secondary) }
+    static var pixelCompact: PixelButtonStyle { PixelButtonStyle(kind: .secondary, isCompact: true) }
 }
 
 #Preview {

@@ -73,17 +73,86 @@ struct GameCard: View {
                 .overlay(alignment: .topLeading) {
                     EngineBadge(engine: game.engine).padding(6)
                 }
+                .overlay(alignment: .topTrailing) {
+                    if game.isFavorite {
+                        FavoriteMark()
+                            .padding(6)
+                            .transition(.scale(scale: 0.2).combined(with: .opacity))
+                    }
+                }
             Text(game.name)
                 .font(Theme.Fonts.headline)
                 .foregroundStyle(Theme.Colors.textPrimary)
                 .lineLimit(1)
+                .padding(.trailing, 28) // room for the "more" button laid over the card
             Text(game.formattedPlayTime)
                 .font(Theme.Fonts.caption)
                 .foregroundStyle(Theme.Colors.textSecondary)
         }
         .padding(12)
         .pixelFrame(isHighlighted ? .cardSelected : .card)
+        .animation(.spring(response: 0.35, dampingFraction: 0.6), value: game.isFavorite)
         .accessibilityElement(children: .combine)
+        .accessibilityValue(game.isFavorite ? Text("Favorite") : Text(""))
+    }
+}
+
+/// Gold star badge on a favorite game's cover.
+struct FavoriteMark: View {
+    var body: some View {
+        Image(systemName: "star.fill")
+            .font(.system(size: 11, weight: .bold))
+            .foregroundStyle(Theme.Colors.gold)
+            .padding(5)
+            .background(Theme.Colors.background.opacity(0.85), in: RoundedRectangle(cornerRadius: 4))
+    }
+}
+
+/// Horizontal chips above the grid; the selection slides between them.
+struct LibraryFilterBar: View {
+    let filters: [LibraryFilter]
+    @Binding var selection: LibraryFilter
+    @Namespace private var namespace
+
+    var body: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: Theme.Spacing.sm) {
+                ForEach(filters) { filter in
+                    let isSelected = filter == selection
+                    Button {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { selection = filter }
+                    } label: {
+                        HStack(spacing: 4) {
+                            if filter == .favorites {
+                                Image(systemName: "star.fill").font(.system(size: 10, weight: .bold))
+                            }
+                            Text(filter.title)
+                        }
+                        .font(Theme.Fonts.pixelLabel)
+                        .textCase(.uppercase)
+                        .foregroundStyle(isSelected ? Theme.Colors.background : Theme.Colors.textPrimary)
+                        .padding(.horizontal, 14)
+                        .frame(height: 32)
+                        .background {
+                            if isSelected {
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(Theme.Colors.gold)
+                                    .matchedGeometryEffect(id: "selection", in: namespace)
+                            } else {
+                                RoundedRectangle(cornerRadius: 6)
+                                    .strokeBorder(Theme.Colors.textSecondary.opacity(0.5), lineWidth: 1.5)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.pressable)
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
+                }
+            }
+            .padding(.horizontal, 20)
+        }
+        .scrollIndicators(.hidden)
+        .sensoryFeedback(.selection, trigger: selection)
     }
 }
 

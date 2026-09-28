@@ -7,14 +7,75 @@
 
 import SwiftUI
 
-/// About, legal notice, source code offer and third-party acknowledgements.
+/// Controls, storage, about, legal notice, source code offer and third-party acknowledgements.
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppDependencies.self) private var dependencies
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
+    @AppStorage(PreferenceKey.controlsOpacity) private var controlsOpacity = 0.9
+    @AppStorage(PreferenceKey.controlsSize) private var controlsSize = ControlsSize.medium
+    @AppStorage(PreferenceKey.hapticsEnabled) private var hapticsEnabled = true
+    @AppStorage(PreferenceKey.iCloudSaves) private var iCloudSaves = true
+
+    @State private var usage: StorageUsage?
+    @State private var isClearingCache = false
 
     var body: some View {
         NavigationStack {
             List {
+                Section {
+                    ControlsPreview(opacity: controlsOpacity, scale: controlsSize.scale)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                } header: {
+                    Text("On-Screen Controls")
+                }
+
+                Section {
+                    VStack(alignment: .leading) {
+                        LabeledContent("Button Opacity", value: controlsOpacity.formatted(.percent.precision(.fractionLength(0))))
+                        Slider(value: $controlsOpacity, in: 0.3...1, step: 0.05)
+                    }
+                    Picker("Button Size", selection: $controlsSize.animation(.spring(response: 0.3, dampingFraction: 0.7))) {
+                        ForEach(ControlsSize.allCases) { size in
+                            Text(size.title).tag(size)
+                        }
+                    }
+                    Toggle("Vibration", isOn: $hapticsEnabled)
+                } footer: {
+                    Text("Buttons fade further while they cover the game.")
+                }
+
+                Section {
+                    Toggle(isOn: $iCloudSaves) {
+                        Label("iCloud Saves", systemImage: "icloud")
+                    }
+                    .disabled(!CloudSaves.isAccountAvailable)
+                } header: {
+                    Text("Saves")
+                } footer: {
+                    if CloudSaves.isAccountAvailable {
+                        Text("Saves sync through iCloud Drive, so you can continue on your other devices. They stay in iCloud if you delete a game and come back when you import it again.")
+                    } else {
+                        Text("Sign in to iCloud in the Settings app to sync saves between your devices.")
+                    }
+                }
+
+                Section {
+                    LabeledContent("Games", value: usage.map { DirectorySize.formatted($0.games) } ?? "…")
+                    LabeledContent("Saves", value: usage.map { DirectorySize.formatted($0.saves) } ?? "…")
+                    LabeledContent("Audio Cache", value: usage.map { DirectorySize.formatted($0.cache) } ?? "…")
+                    Button("Clear Audio Cache", role: .destructive) {
+                        Task { await clearCache() }
+                    }
+                    .disabled(isClearingCache || (usage?.cache ?? 0) == 0)
+                } header: {
+                    Text("Storage")
+                } footer: {
+                    Text("Converted game music is cached so it starts faster. Clearing it is safe; it is rebuilt when needed.")
+                }
+                .contentTransition(.numericText())
+
                 Section {
                     LabeledContent("Version", value: AppInfo.version)
                     Button("Show Introduction Again") {
@@ -70,6 +131,67 @@ struct SettingsView: View {
         }
         .tint(Theme.Colors.ember)
         .preferredColorScheme(.dark)
+        .task { await refreshUsage() }
+    }
+
+    private func refreshUsage() async {
+        let directories = dependencies.directories
+        let result = await Task.detached(priority: .utility) { StorageUsage.measure(directories) }.value
+        withAnimation { usage = result }
+    }
+
+    private func clearCache() async {
+        isClearingCache = true
+        await Task.detached { OggTranscoder.clearCache() }.value
+        await refreshUsage()
+        isClearingCache = false
+    }
+}
+
+nonisolated struct StorageUsage: Sendable {
+    let games: Int64
+    let saves: Int64
+    let cache: Int64
+
+    static func measure(_ directories: AppDirectories) -> StorageUsage {
+        StorageUsage(
+            games: DirectorySize.bytes(at: directories.games),
+            saves: DirectorySize.bytes(at: directories.saves),
+            cache: DirectorySize.bytes(at: OggTranscoder.cacheDirectory)
+        )
+    }
+}
+
+/// Live miniature of the gamepad so opacity and size changes are visible right away.
+private struct ControlsPreview: View {
+    let opacity: Double
+    let scale: CGFloat
+
+    var body: some View {
+        ZStack {
+            Image(.coverForest)
+                .interpolation(.none)
+                .resizable()
+                .scaledToFill()
+                .frame(height: 120)
+                .clipped()
+            HStack {
+                Image(systemName: "dpad.fill")
+                    .font(.system(size: 44))
+                Spacer()
+                HStack(spacing: 10) {
+                    Circle().frame(width: 34, height: 34).overlay(Text("B").font(.headline.weight(.heavy)).foregroundStyle(Theme.Colors.background)).offset(y: 12)
+                    Circle().frame(width: 34, height: 34).overlay(Text("A").font(.headline.weight(.heavy)).foregroundStyle(Theme.Colors.background))
+                }
+            }
+            .foregroundStyle(Theme.Colors.textPrimary)
+            .scaleEffect(scale)
+            .padding(.horizontal, 36)
+            .opacity(opacity)
+        }
+        .frame(height: 120)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .accessibilityHidden(true)
     }
 }
 
@@ -152,4 +274,5 @@ enum AppInfo {
 
 #Preview {
     SettingsView()
+        .environment(AppDependencies.preview)
 }

@@ -104,6 +104,7 @@ actor GameImporter {
     func deleteGame(_ game: GameProject) async throws {
         try? FileManager.default.removeItem(at: directories.gameDirectory(for: game.id))
         try? FileManager.default.removeItem(at: directories.coverFile(for: game.id))
+        try? FileManager.default.removeItem(at: directories.saveDirectory(for: game.id))
         try await repository.delete(id: game.id)
     }
 
