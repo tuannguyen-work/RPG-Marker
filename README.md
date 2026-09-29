@@ -1,7 +1,7 @@
-# RPG-Marker
+# RPG Deck
 
-An iOS/iPadOS player for games made with RPG Maker. Import a game you own from
-the Files app and play it with touch controls or a game controller.
+RPG Deck is an iOS player for games made with RPG Maker. Import a game you own from
+the Files app and play it with on-screen controls.
 
 > This app does not include, sell, host or distribute any games. All games must
 > be legally obtained by the user. RPG Maker is a trademark of its respective
