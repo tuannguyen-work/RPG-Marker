@@ -159,6 +159,25 @@ final class HomeViewModel {
         }
     }
 
+    /// The small game bundled with the app (DemoGame/build_demo.py), for trying the app right away.
+    static var demoGameURL: URL? {
+        Bundle.main.url(forResource: "DemoGame", withExtension: "zip")
+    }
+
+    /// Whether the demo is already in the library (matched by the title its data declares).
+    var hasDemoGame: Bool {
+        projects.contains { $0.name == Self.demoGameName }
+    }
+
+    static let demoGameName = "RPG Deck Demo"
+
+    @discardableResult
+    func importDemoGame() async -> GameProject? {
+        guard let url = Self.demoGameURL else { return nil }
+        if let existing = projects.first(where: { $0.name == Self.demoGameName }) { return existing }
+        return await importGame(from: url)
+    }
+
     private func updateImportProgress(_ progress: Double) {
         guard case .importing = importState else { return }
         importState = .importing(progress: progress)

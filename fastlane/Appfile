@@ -1,0 +1,3 @@
+# Bundle ID and team; credentials come from the App Store Connect API key (see fastlane/README.md).
+app_identifier("com.solid.questplayer")
+team_id("D2597PB9TH")

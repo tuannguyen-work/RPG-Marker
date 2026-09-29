@@ -37,6 +37,8 @@ struct HomeView: View {
             if viewModel.projects.isEmpty && !viewModel.isLoading && viewModel.importState == nil {
                 EmptyLibraryView {
                     isFilePickerPresented = true
+                } onDemo: {
+                    playDemo()
                 } onHelp: {
                     showHelp(.importing)
                 }
@@ -73,7 +75,10 @@ struct HomeView: View {
             SettingsView()
         }
         .sheet(isPresented: $isHelpPresented) {
-            HelpSheet(initialTopic: helpTopic)
+            HelpSheet(initialTopic: helpTopic, onPlayDemo: HomeViewModel.demoGameURL == nil ? nil : {
+                isHelpPresented = false
+                playDemo()
+            })
         }
         .sheet(item: $detailGame, onDismiss: {
             if let game = pendingPlay {
@@ -159,6 +164,7 @@ struct HomeView: View {
             let arguments = ProcessInfo.processInfo.arguments
             isSettingsPresented = arguments.contains("-showSettings")
             if arguments.contains("-showDetail") { detailGame = viewModel.projects.first }
+            if arguments.contains("-playDemo") { playDemo() }
             if let index = arguments.firstIndex(of: "-showGuide") {
                 showHelp(arguments.indices.contains(index + 1) ? GuideTopic(rawValue: arguments[index + 1]) : nil)
             }
@@ -189,6 +195,15 @@ struct HomeView: View {
             isSyncingSaves = false
             sessionGame = game
             playingGame = game
+        }
+    }
+
+    /// Adds the bundled demo (once) and starts it.
+    private func playDemo() {
+        Task {
+            if let game = await viewModel.importDemoGame() {
+                play(game)
+            }
         }
     }
 

@@ -1,0 +1,15 @@
+RPG Deck is a player for role-playing games the user already owns. It does not include, sell or download any games, and it has no accounts or in-app purchases.
+
+To try it without any other game, the app includes a short demo game made for it:
+
+1. Open RPG Deck. On the empty library, tap "Play the Demo" (it is also in the Guide, the ? button).
+2. The demo is added to the library and starts in landscape with on-screen buttons. Press A on "New Game".
+3. Walk with the direction pad, press A to talk to the old man, open the chest, or save at the golden crystal. The pause button is at the top left.
+
+The demo's engine is the RPG Maker MV corescript (MIT License); its graphics, sounds and data were made for this app (CC0). It uses no RPG Maker RTP assets. Licenses: Settings → Acknowledgements.
+
+To test importing, any ZIP of the demo or of a Windows RPG Maker XP–MZ game can be imported with the + button. The in-app Guide shows the steps with illustrations.
+
+Saves sync through the app's iCloud Drive container when the device is signed in to iCloud; this can be turned off in Settings.
+
+Game code runs only inside the app: MV/MZ games (HTML5/JavaScript) in WKWebView, XP/VX/VX Ace games in the bundled open-source mkxp-z runtime (Ruby). The app itself is open source under GPL-3.0-or-later.

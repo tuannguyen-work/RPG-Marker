@@ -1,0 +1,129 @@
+# fastlane lanes for RPG Deck. Run from the repository root: `bundle exec fastlane <lane>`.
+# See fastlane/README.md for the one-time setup.
+
+default_platform(:ios)
+
+PROJECT = "RPG Maker.xcodeproj"
+SCHEME = "RPG Maker"
+OUTPUT = "fastlane/build"
+
+platform :ios do
+  before_all do |lane|
+    # The XP/VX/VX Ace runtime is built separately (README.md → "Building mkxp-z").
+    if [:build, :beta, :screenshots].include?(lane) && !File.directory?("../RPG Maker/Runtime/MKXP/Assets.bundle")
+      UI.user_error!("mkxp-z isn't built yet. Run ThirdParty/mkxp-ios/build.sh first (see README.md).")
+    end
+  end
+
+  private_lane :api_key do
+    ["ASC_KEY_ID", "ASC_ISSUER_ID", "ASC_KEY_PATH"].each do |name|
+      UI.user_error!("#{name} is missing. Copy fastlane/.env.example to fastlane/.env and fill it in.") if ENV[name].to_s.empty?
+    end
+    app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_filepath: ENV["ASC_KEY_PATH"]
+    )
+  end
+
+  desc "Check the API key works and the app record exists. Read-only."
+  lane :auth_test do
+    api_key
+    app = Spaceship::ConnectAPI::App.find(CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier))
+    UI.user_error!("Key works, but there is no app for com.solid.questplayer in App Store Connect yet. Create it first (My Apps → +).") if app.nil?
+    UI.success("API key works — #{app.name} (#{app.id})")
+    app.get_app_store_versions.first(3).each do |version|
+      UI.message("  version #{version.version_string}: #{version.app_store_state}")
+    end
+  end
+
+  desc "Build a signed App Store IPA into fastlane/build (build number = latest TestFlight build + 1)"
+  lane :build do
+    key = api_key
+    build = latest_testflight_build_number(api_key: key, initial_build_number: 0) + 1
+    UI.message("Build number #{build}")
+
+    build_app(
+      project: PROJECT,
+      scheme: SCHEME,
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: OUTPUT,
+      output_name: "RPGDeck.ipa",
+      clean: true,
+      # Automatic signing; the API key lets Xcode create or refresh profiles without an Apple ID session.
+      xcargs: [
+        # Set for this build only, so the project file doesn't change on every upload.
+        "CURRENT_PROJECT_VERSION=#{build}",
+        "-allowProvisioningUpdates",
+        "-authenticationKeyPath '#{ENV['ASC_KEY_PATH']}'",
+        "-authenticationKeyID #{ENV['ASC_KEY_ID']}",
+        "-authenticationKeyIssuerID #{ENV['ASC_ISSUER_ID']}",
+      ].join(" "),
+      export_options: {
+        iCloudContainerEnvironment: "Production",
+      }
+    )
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    build
+    upload_to_testflight(
+      api_key: lane_context[SharedValues::APP_STORE_CONNECT_API_KEY],
+      ipa: "#{OUTPUT}/RPGDeck.ipa",
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Upload App Store text (fastlane/metadata) without a build or screenshots"
+  lane :metadata do
+    upload_to_app_store(
+      api_key: api_key,
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      metadata_path: "fastlane/metadata",
+      force: true,
+      precheck_include_in_app_purchases: false
+    )
+  end
+
+  desc "Capture App Store screenshots on the iPhone 17 Pro Max simulator (6.9\") into fastlane/screenshots"
+  lane :screenshots do
+    sh("./scripts/screenshots.sh")
+  end
+
+  desc "Upload screenshots from fastlane/screenshots"
+  lane :upload_screenshots do
+    upload_to_app_store(
+      api_key: api_key,
+      skip_binary_upload: true,
+      skip_metadata: true,
+      screenshots_path: "fastlane/screenshots",
+      overwrite_screenshots: true,
+      force: true,
+      precheck_include_in_app_purchases: false
+    )
+  end
+
+  desc "Submit the latest TestFlight build, with metadata and screenshots, for App Review"
+  lane :release do
+    upload_to_app_store(
+      api_key: api_key,
+      skip_binary_upload: true,
+      metadata_path: "fastlane/metadata",
+      screenshots_path: "fastlane/screenshots",
+      overwrite_screenshots: true,
+      submit_for_review: true,
+      automatic_release: false,
+      force: true,
+      precheck_include_in_app_purchases: false,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false,
+        # The app ships no games or other third-party media; users import their own.
+        content_rights_contains_third_party_content: false,
+      }
+    )
+  end
+end

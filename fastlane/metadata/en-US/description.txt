@@ -1,0 +1,31 @@
+RPG Deck turns your iPhone into a handheld console for the PC role-playing games you already own.
+
+Import a game from the Files app and play it full screen in landscape, with on-screen buttons placed right under your thumbs. New here? Start with the built-in demo adventure.
+
+SUPPORTED GAMES
+Windows games made with RPG Maker XP, VX, VX Ace, MV and MZ. The engine is detected automatically when you import.
+
+YOUR LIBRARY
+• Import ZIP files or folders from Files, iCloud Drive or the Share sheet
+• Covers made from each game's own title screen
+• Search, favorites, filters and sorting
+• Play time and "Continue" for the game you played last
+
+MADE FOR TOUCH
+• Direction pad with diagonals, A, B, Menu and Turbo/Dash buttons
+• Adjustable button size and opacity, optional vibration
+• Pause any time to change speed, hide the buttons or quit
+• Tap-to-move in MV and MZ games
+
+SAVES THAT FOLLOW YOU
+• Saves sync with iCloud to your other devices
+• Deleting a game keeps its saves in iCloud; import it again and they're back
+• Export and import saves as ZIP files
+
+HELP WHEN YOU NEED IT
+An illustrated guide walks you through adding your first game, the controls, saves, and fixes for common problems.
+
+PRIVATE AND OPEN
+No accounts, no ads, no tracking, no data collected. RPG Deck is free software under the GNU GPL, version 3 or later; the source code is available on GitHub.
+
+Apart from its demo, RPG Deck does not include, sell or download any games. Only import games you have legally obtained. RPG Maker is a trademark of its respective owner; RPG Deck is not affiliated with or endorsed by it.

@@ -35,3 +35,14 @@ license text in `Resources/Licenses/`.
 - Build mkxp-z with `enable-https` / OpenSSL **disabled**.
 - Never bundle RPG Maker RTP files, fonts, or games owned by others.
 
+
+## Bundled demo game (`RPG Maker/Resources/DemoGame.zip`)
+
+Built by `DemoGame/build_demo.py`; full texts in `DemoGame/LICENSES.txt`.
+
+| Component | License |
+|---|---|
+| RPG Maker MV corescript v1.6.1 (community-1.3b), KADOKAWA / rpgtkoolmv | MIT |
+| pixi.js 4.5.4, pixi-tilemap, pixi-picture, FPSMeter, lz-string, iphone-inline-video | MIT |
+| Pixelify Sans font | SIL OFL 1.1 |
+| Demo graphics, sounds, maps and text (generated) | CC0 1.0 |
