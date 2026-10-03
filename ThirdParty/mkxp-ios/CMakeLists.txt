@@ -74,6 +74,16 @@ foreach(EMBEDDED ${EMBEDDED_FILES})
         COMMAND_ERROR_IS_FATAL ANY)
 endforeach()
 
+# Ruby installs its headers in include/ruby-<API version>/ plus an architecture folder
+# (arm64-darwin here); find them rather than hard-coding either name.
+file(GLOB RUBY_INCLUDE_DIR LIST_DIRECTORIES true "${DEPS_DIR}/include/ruby-*")
+list(GET RUBY_INCLUDE_DIR 0 RUBY_INCLUDE_DIR)
+file(GLOB RUBY_ARCH_INCLUDE_DIR LIST_DIRECTORIES true "${RUBY_INCLUDE_DIR}/*-darwin*")
+if(NOT EXISTS "${RUBY_INCLUDE_DIR}/ruby.h" OR NOT RUBY_ARCH_INCLUDE_DIR)
+    message(FATAL_ERROR "Ruby headers not found under ${DEPS_DIR}/include (build mkxp-deps first)")
+endif()
+message(STATUS "Ruby headers: ${RUBY_INCLUDE_DIR}, ${RUBY_ARCH_INCLUDE_DIR}")
+
 include_directories(
     ${GENERATED_DIR}
     ${MKXPZ_ROOT}/ios  # iOS-specific stubs (TouchBar.h)
@@ -104,8 +114,8 @@ include_directories(
     ${DEPS_DIR}/include/pixman-1  # pixman.h
     ${DEPS_DIR}/include/freetype2  # ft2build.h
     ${DEPS_DIR}/include/uchardet
-    ${DEPS_DIR}/include/ruby-3.1.0
-    ${DEPS_DIR}/include/ruby-3.1.0/arm64-darwin
+    ${RUBY_INCLUDE_DIR}
+    ${RUBY_ARCH_INCLUDE_DIR}
 )
 
 # ====================

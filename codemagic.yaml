@@ -5,9 +5,9 @@
 #   - the environment group "ios_signing" with CERTIFICATE_PRIVATE_KEY
 # Then start the "RPG Deck → TestFlight" workflow by hand.
 #
-# The XP/VX/VX Ace runtime (mkxp-z) is compiled from source. Its output is cached between builds
-# and only rebuilt when ThirdParty/ changes, so the first build takes about an hour and later
-# ones about 10 minutes.
+# The XP/VX/VX Ace runtime (mkxp-z) comes prebuilt from ThirdParty/Prebuilt, so a build takes
+# about 10 minutes. Only if ThirdParty/ changed without refreshing it (scripts/update_prebuilt_mkxp.sh)
+# is mkxp-z compiled here (about an hour; the result is cached).
 
 workflows:
   ios-testflight:
@@ -29,7 +29,7 @@ workflows:
       cache_paths:
         - $HOME/mkxp-cache   # mkxp-z build output, see scripts/ci_build_mkxp.sh
     scripts:
-      - name: Build the XP/VX/VX Ace runtime (mkxp-z), or reuse the cached build
+      - name: Prepare the XP/VX/VX Ace runtime (prebuilt mkxp-z)
         script: MKXP_CACHE="$HOME/mkxp-cache" scripts/ci_build_mkxp.sh iphoneos
       - name: Initialize keychain
         script: keychain initialize

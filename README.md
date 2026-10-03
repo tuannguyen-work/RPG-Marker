@@ -66,9 +66,10 @@ fastlane release       # submit the latest build for review
 ## CI (Codemagic)
 
 `codemagic.yaml` builds and uploads to TestFlight with the team's App Store Connect integration
-("Codemagic CI") and the `ios_signing` environment group. `scripts/ci_build_mkxp.sh` compiles the
-mkxp-z runtime and keeps it in the build cache, rebuilding only when `ThirdParty/` changes (first
-build about an hour, later ones about 10 minutes).
+("Codemagic CI") and the `ios_signing` environment group. The mkxp-z runtime for devices is committed
+prebuilt in `ThirdParty/Prebuilt/iphoneos` (built from this repository's `ThirdParty/` and the
+sources in `ThirdParty/SOURCES.md`), so CI builds take about 10 minutes. After changing
+`ThirdParty/`, rebuild and refresh it with `scripts/ci_build_mkxp.sh iphoneos && scripts/update_prebuilt_mkxp.sh`.
 
 ## License
 
