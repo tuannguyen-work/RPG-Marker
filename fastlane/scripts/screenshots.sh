@@ -3,8 +3,9 @@
 # app's DEBUG launch arguments (sample library, open detail/guide/settings) and a clean status bar.
 # Output: fastlane/screenshots/en-US/<n>_<name>.png, ready for `fastlane upload_screenshots`.
 #
-# The in-game shot plays the bundled demo: `-playDemo` adds and starts it, `-smoketest` presses A to
-# get past the title screen, and the landscape capture is rotated upright.
+# The in-game shot plays the test game from DemoGame/ (built here if needed): `-importAndPlay` imports
+# and starts it, `-smoketest` presses A to get past the title screen, and the landscape capture is
+# rotated upright.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -12,6 +13,9 @@ OUT="$ROOT/fastlane/screenshots/en-US"
 DERIVED="$ROOT/fastlane/build/ScreenshotsDerivedData"
 DEVICE_NAME="iPhone 17 Pro Max"
 BUNDLE_ID="com.solid.questplayer"
+
+DEMO_ZIP="$ROOT/DemoGame/build/RPG Deck Demo.zip"
+[ -f "$DEMO_ZIP" ] || python3 "$ROOT/DemoGame/build_demo.py"
 
 UDID=$(xcrun simctl list devices available | grep -m1 "$DEVICE_NAME (" | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
 [ -n "$UDID" ] || { echo "No '$DEVICE_NAME' simulator found"; exit 1; }
@@ -46,7 +50,7 @@ shoot 1_auto_library   -sampleData -hasCompletedOnboarding YES
 
 # In game: title → New Game → the demo map. The smoke test's later presses open and close the sign.
 xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
-xcrun simctl launch "$UDID" "$BUNDLE_ID" -hasCompletedOnboarding YES -guide.controlsSeen YES -playDemo -smoketest >/dev/null
+xcrun simctl launch "$UDID" "$BUNDLE_ID" -hasCompletedOnboarding YES -guide.controlsSeen YES -smoketest -importAndPlay "$DEMO_ZIP" >/dev/null
 sleep 25
 xcrun simctl io "$UDID" screenshot "$OUT/2_auto_playing.png" >/dev/null 2>&1
 # Captures come out in portrait pixel order; turn the landscape shot upright.

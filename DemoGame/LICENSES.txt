@@ -1,7 +1,7 @@
 RPG Deck Demo — licenses
 ========================
 
-This demo was made for the RPG Deck app so it can be tried without another game.
+This demo was made for testing the RPG Deck app (App Review, screenshots).
 It may be copied, shared and sold, as long as the notices below are kept.
 
 Game content (maps, events, text, graphics including the title screen illustration, sounds):

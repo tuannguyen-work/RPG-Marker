@@ -118,7 +118,7 @@ struct SettingsView: View {
                 }
 
                 Section("Legal") {
-                    Text("This app is a player. Apart from its built-in demo, it does not include, sell, host or distribute any games. Only import games you have legally obtained.")
+                    Text("This app is a player. It does not include, sell, host or distribute any games. Only import games you have legally obtained.")
                     Text("RPG Maker is a trademark of its respective owner. This app is not affiliated with or endorsed by it.")
                 }
                 .font(Theme.Fonts.caption)
@@ -262,8 +262,6 @@ struct Acknowledgement: Identifiable {
     static var all: [Acknowledgement] {
         let base = [
             Acknowledgement(name: "stb_vorbis", license: "MIT", licenseResource: "License-stb_vorbis"),
-            // In the bundled demo game (DemoGame/).
-            Acknowledgement(name: "RPG Deck Demo (corescript, pixi.js, Pixelify Sans)", license: "MIT / OFL 1.1 / CC0", licenseResource: "License-DemoGame"),
         ]
         return MKXPIsAvailable() ? base + rgssRuntime : base
     }

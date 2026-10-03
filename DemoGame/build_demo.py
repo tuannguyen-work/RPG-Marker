@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: CC0-1.0
-"""Builds "RPG Deck Demo", the small game bundled with the app so anyone (including App Review)
-can try it without finding a game first.
+"""Builds "RPG Deck Demo", a small game to attach for App Review and to use in screenshots. It is
+not bundled with the app.
 
 Everything in it may be redistributed, commercially too:
   - engine: RPG Maker MV corescript (MIT, KADOKAWA / rpgtkoolmv) and its libraries (MIT)
@@ -10,7 +10,7 @@ Everything in it may be redistributed, commercially too:
 No RPG Maker RTP (default graphics or audio) is used.
 
 Usage: python3 DemoGame/build_demo.py
-Output: DemoGame/build/RPG Deck Demo/ and "RPG Maker/Resources/DemoGame.zip".
+Output: DemoGame/build/RPG Deck Demo/ and DemoGame/build/RPG Deck Demo.zip.
 Needs Pillow and ffmpeg (for the sound effects).
 """
 
@@ -27,7 +27,7 @@ from PIL import Image, ImageDraw
 HERE = os.path.dirname(os.path.abspath(__file__))
 RUNTIME = os.path.join(HERE, "runtime")
 GAME = os.path.join(HERE, "build", "RPG Deck Demo")
-ZIP_OUT = os.path.join(HERE, "..", "RPG Maker", "Resources", "DemoGame.zip")
+ZIP_OUT = os.path.join(HERE, "build", "RPG Deck Demo.zip")
 TITLE_ART = os.path.join(HERE, "title_art.png")
 
 TILE = 48

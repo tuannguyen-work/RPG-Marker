@@ -55,9 +55,6 @@ enum GuideTopic: String, CaseIterable, Identifiable, Hashable {
 
 /// Index of the guide. Pushed from Settings, or shown in a sheet with `HelpSheet`.
 struct HelpCenterView: View {
-    /// Offered as "Play the Demo" when the guide is opened from the library.
-    var onPlayDemo: (() -> Void)?
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
@@ -65,13 +62,6 @@ struct HelpCenterView: View {
                     FeaturedTopicCard(topic: .importing)
                 }
                 .buttonStyle(.pressable)
-
-                if let onPlayDemo {
-                    Button(action: onPlayDemo) {
-                        DemoRow()
-                    }
-                    .buttonStyle(.pressable)
-                }
 
                 ForEach(GuideTopic.allCases.dropFirst()) { topic in
                     NavigationLink(value: topic) {
@@ -81,7 +71,7 @@ struct HelpCenterView: View {
                 }
 
                 GuideTip(
-                    text: "Apart from its demo, this app doesn't include or sell games. Play games you've bought or downloaded from their creators.",
+                    text: "This app doesn't include or sell games. Play games you've bought or downloaded from their creators.",
                     systemImage: "info.circle.fill"
                 )
                 .padding(.top, 6)
@@ -101,13 +91,12 @@ struct HelpCenterView: View {
 /// The guide in its own navigation stack, optionally opened on a topic.
 struct HelpSheet: View {
     var initialTopic: GuideTopic?
-    var onPlayDemo: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
     @State private var path: [GuideTopic] = []
 
     var body: some View {
         NavigationStack(path: $path) {
-            HelpCenterView(onPlayDemo: onPlayDemo)
+            HelpCenterView()
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Done") { dismiss() }
@@ -148,35 +137,6 @@ private struct FeaturedTopicCard: View {
         }
         .padding(16)
         .pixelFrame(.window)
-        .accessibilityElement(children: .combine)
-    }
-}
-
-/// "Play the Demo" entry: no game needed to try the app.
-private struct DemoRow: View {
-    var body: some View {
-        HStack(spacing: 14) {
-            Image(systemName: "sparkles")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(Theme.Colors.background)
-                .frame(width: 42, height: 42)
-                .background(Theme.Colors.gold, in: RoundedRectangle(cornerRadius: 8))
-            VStack(alignment: .leading, spacing: 3) {
-                Text("Play the Demo")
-                    .font(Theme.Fonts.headline)
-                    .foregroundStyle(Theme.Colors.textPrimary)
-                Text("A short adventure made for this app. No download needed.")
-                    .font(Theme.Fonts.caption)
-                    .foregroundStyle(Theme.Colors.textSecondary)
-                    .multilineTextAlignment(.leading)
-            }
-            Spacer(minLength: 0)
-            Image(systemName: "play.fill")
-                .font(.footnote.weight(.bold))
-                .foregroundStyle(Theme.Colors.gold)
-        }
-        .padding(14)
-        .pixelFrame(.cardSelected)
         .accessibilityElement(children: .combine)
     }
 }

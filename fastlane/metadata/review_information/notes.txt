@@ -1,15 +1,14 @@
 RPG Deck is a player for role-playing games the user already owns. It does not include, sell or download any games, and it has no accounts or in-app purchases.
 
-To try it without any other game, the app includes a short demo game made for it:
+To try it, please use the attached "RPG Deck Demo.zip", a short test game we made for this purpose (engine: the MIT-licensed RPG Maker MV corescript; graphics, sounds and data made by us and released as CC0; no RPG Maker RTP assets).
 
-1. Open RPG Deck. On the empty library, tap "Play the Demo" (it is also in the Guide, the ? button).
-2. The demo is added to the library and starts in landscape with on-screen buttons. Press A on "New Game".
-3. Walk with the direction pad, press A to talk to the old man, open the chest, or save at the golden crystal. The pause button is at the top left.
+1. Save the attached ZIP to the Files app on the test device (for example via AirDrop, or by opening the attachment on the device and choosing Save to Files).
+2. Open RPG Deck and tap + at the top right (or "Import Game" on the empty library), then choose the ZIP.
+3. When the import finishes, tap the game's card. It opens in landscape with on-screen buttons. Press A on "New Game".
+4. Walk with the direction pad, press A to talk to the old man, open the chest, or save at the golden crystal. The pause button is at the top left.
 
-The demo's engine is the RPG Maker MV corescript (MIT License); its graphics, sounds and data were made for this app (CC0). It uses no RPG Maker RTP assets. Licenses: Settings → Acknowledgements.
-
-To test importing, any ZIP of the demo or of a Windows RPG Maker XP–MZ game can be imported with the + button. The in-app Guide shows the steps with illustrations.
+A ZIP can also be opened from Files or Safari with Share → RPG Deck. The in-app Guide (? button) shows these steps with illustrations.
 
 Saves sync through the app's iCloud Drive container when the device is signed in to iCloud; this can be turned off in Settings.
 
-Game code runs only inside the app: MV/MZ games (HTML5/JavaScript) in WKWebView, XP/VX/VX Ace games in the bundled open-source mkxp-z runtime (Ruby). The app itself is open source under GPL-3.0-or-later.
+Game code runs only inside the app: MV/MZ games (HTML5/JavaScript) in WKWebView, XP/VX/VX Ace games in the bundled open-source mkxp-z runtime (Ruby). The app is open source under GPL-3.0-or-later.

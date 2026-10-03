@@ -37,8 +37,6 @@ struct HomeView: View {
             if viewModel.projects.isEmpty && !viewModel.isLoading && viewModel.importState == nil {
                 EmptyLibraryView {
                     isFilePickerPresented = true
-                } onDemo: {
-                    playDemo()
                 } onHelp: {
                     showHelp(.importing)
                 }
@@ -75,10 +73,7 @@ struct HomeView: View {
             SettingsView()
         }
         .sheet(isPresented: $isHelpPresented) {
-            HelpSheet(initialTopic: helpTopic, onPlayDemo: HomeViewModel.demoGameURL == nil ? nil : {
-                isHelpPresented = false
-                playDemo()
-            })
+            HelpSheet(initialTopic: helpTopic)
         }
         .sheet(item: $detailGame, onDismiss: {
             if let game = pendingPlay {
@@ -164,7 +159,14 @@ struct HomeView: View {
             let arguments = ProcessInfo.processInfo.arguments
             isSettingsPresented = arguments.contains("-showSettings")
             if arguments.contains("-showDetail") { detailGame = viewModel.continueGame ?? viewModel.projects.first }
-            if arguments.contains("-playDemo") { playDemo() }
+            // `-importAndPlay <path to a ZIP>`: import a game from the Mac (simulator) and start it.
+            if let index = arguments.firstIndex(of: "-importAndPlay"), arguments.indices.contains(index + 1) {
+                let url = URL(filePath: arguments[index + 1])
+                let name = url.deletingPathExtension().lastPathComponent
+                var game = viewModel.projects.first { $0.name == name }
+                if game == nil { game = await viewModel.importGame(from: url) }
+                if let game { play(game) }
+            }
             if let index = arguments.firstIndex(of: "-showGuide") {
                 showHelp(arguments.indices.contains(index + 1) ? GuideTopic(rawValue: arguments[index + 1]) : nil)
             }
@@ -195,15 +197,6 @@ struct HomeView: View {
             isSyncingSaves = false
             sessionGame = game
             playingGame = game
-        }
-    }
-
-    /// Adds the bundled demo (once) and starts it.
-    private func playDemo() {
-        Task {
-            if let game = await viewModel.importDemoGame() {
-                play(game)
-            }
         }
     }
 

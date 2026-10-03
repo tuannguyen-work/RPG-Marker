@@ -204,7 +204,6 @@ struct ContinueCard: View {
 
 struct EmptyLibraryView: View {
     let onImport: () -> Void
-    let onDemo: () -> Void
     let onHelp: () -> Void
 
     var body: some View {
@@ -218,7 +217,7 @@ struct EmptyLibraryView: View {
                 Text("Your library is empty")
                     .font(Theme.Fonts.title)
                     .foregroundStyle(Theme.Colors.textPrimary)
-                Text("Import a game you own from the Files app, or try the demo made for this app.")
+                Text("Import a game you own from the Files app to start playing.")
                     .font(Theme.Fonts.body)
                     .foregroundStyle(Theme.Colors.textSecondary)
                     .multilineTextAlignment(.center)
@@ -228,14 +227,10 @@ struct EmptyLibraryView: View {
                     Label("Import Game", systemImage: "plus").frame(maxWidth: 240)
                 }
                 .buttonStyle(.pixel)
-                Button(action: onDemo) {
-                    Label("Play the Demo", systemImage: "sparkles").frame(maxWidth: 240)
+                Button(action: onHelp) {
+                    Label("How to Add Games", systemImage: "questionmark.circle").frame(maxWidth: 240)
                 }
                 .buttonStyle(.pixelSecondary)
-                Button("How to Add Games", action: onHelp)
-                    .font(Theme.Fonts.headline)
-                    .foregroundStyle(Theme.Colors.textSecondary)
-                    .frame(minHeight: 44)
             }
         }
         .padding(32)
