@@ -31,7 +31,9 @@ fi
 echo "Building mkxp-z for $PLATFORM (about 40 minutes)…"
 brew list cmake meson ninja autoconf automake libtool pkg-config >/dev/null 2>&1 \
     || brew install cmake meson ninja autoconf automake libtool pkg-config
-make -C "$ROOT/ThirdParty/mkxp-deps" everything PLATFORM="$PLATFORM" -j"$(sysctl -n hw.ncpu)"
+# Sequential on purpose: the targets build in order (SDL before SDL_image, …) and each one already
+# compiles in parallel. With -j here, SDL_image configures before SDL is installed.
+make -C "$ROOT/ThirdParty/mkxp-deps" everything PLATFORM="$PLATFORM"
 "$ROOT/ThirdParty/mkxp-ios/build.sh" "$PLATFORM"
 
 if [ -n "$CACHE" ]; then
