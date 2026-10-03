@@ -29,3 +29,6 @@ PRIVATE AND OPEN
 No accounts, no ads, no tracking, no data collected. RPG Deck is free software under the GNU GPL, version 3 or later; its complete source code is available from the developer website linked on this page.
 
 RPG Deck does not include, sell or download any games. Only import games you have legally obtained. RPG Maker is a trademark of its respective owner; RPG Deck is not affiliated with or endorsed by it.
+
+Terms of Use: https://solidstudiogame.com/terms
+Privacy Policy: https://solidstudiogame.com/privacy

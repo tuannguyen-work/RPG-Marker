@@ -118,16 +118,21 @@ struct SettingsView: View {
                 }
 
                 Section("Legal") {
-                    Text("This app is a player. It does not include, sell, host or distribute any games. Only import games you have legally obtained.")
-                    Text("RPG Maker is a trademark of its respective owner. This app is not affiliated with or endorsed by it.")
-                }
-                .font(Theme.Fonts.caption)
-                .foregroundStyle(Theme.Colors.textSecondary)
-
-                Section {
+                    Link(destination: AppInfo.termsURL) {
+                        Label("Terms of Use", systemImage: "doc.text")
+                    }
                     Link(destination: AppInfo.privacyPolicyURL) {
                         Label("Privacy Policy", systemImage: "hand.raised")
                     }
+                    Group {
+                        Text("This app is a player. It does not include, sell, host or distribute any games. Only import games you have legally obtained.")
+                        Text("RPG Maker is a trademark of its respective owner. This app is not affiliated with or endorsed by it.")
+                    }
+                    .font(Theme.Fonts.caption)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+                }
+
+                Section {
                     NavigationLink("GNU General Public License v3") {
                         LicenseTextView(title: "GPL-3.0", resource: "License-GPL-3.0")
                     }
@@ -303,7 +308,8 @@ enum AppInfo {
 
     /// GPL source code offer: must point at the source of this exact release.
     static let supportURL = URL(string: "https://github.com/tuannguyen-work/RPG-Marker/issues")!
-    static let privacyPolicyURL = URL(string: "https://github.com/tuannguyen-work/RPG-Marker/blob/main/PRIVACY.md")!
+    static let privacyPolicyURL = URL(string: "https://solidstudiogame.com/privacy")!
+    static let termsURL = URL(string: "https://solidstudiogame.com/terms")!
 }
 
 #Preview {

@@ -1,6 +1,6 @@
 #!/bin/bash
-# Points every public link (app Settings, privacy policy, App Store metadata) at the public source
-# repository:  scripts/set_public_repo.sh https://github.com/<owner>/<repo>
+# Points the links to the public source repository (Report a Problem, App Store support and
+# marketing URLs) at a new repository:  scripts/set_public_repo.sh https://github.com/<owner>/<repo>
 set -euo pipefail
 
 NEW="${1:?usage: scripts/set_public_repo.sh https://github.com/<owner>/<repo>}"
@@ -12,7 +12,6 @@ OLD=$(grep -oE 'https://github.com/[^/"]+/[^/"]+' "RPG Maker/Features/Settings/S
 FILES=(
     "RPG Maker/Features/Settings/SettingsView.swift"
     "PRIVACY.md"
-    "fastlane/metadata/en-US/privacy_url.txt"
     "fastlane/metadata/en-US/support_url.txt"
     "fastlane/metadata/en-US/marketing_url.txt"
 )
