@@ -63,6 +63,13 @@ fastlane beta          # build and upload to TestFlight
 fastlane release       # submit the latest build for review
 ```
 
+## CI (Codemagic)
+
+`codemagic.yaml` builds and uploads to TestFlight with the team's App Store Connect integration
+("Codemagic CI") and the `ios_signing` environment group. `scripts/ci_build_mkxp.sh` compiles the
+mkxp-z runtime and keeps it in the build cache, rebuilding only when `ThirdParty/` changes (first
+build about an hour, later ones about 10 minutes).
+
 ## License
 
 Copyright (C) 2026 The RPG-Marker Authors (see `AUTHORS`).

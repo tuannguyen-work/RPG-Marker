@@ -1,0 +1,72 @@
+# RPG Deck → TestFlight on Codemagic (set up like HiGuitar's).
+#
+# One-time setup in Codemagic: add this repository as an app, and make sure the team has
+#   - the App Store Connect API key integration named "Codemagic CI"
+#   - the environment group "ios_signing" with CERTIFICATE_PRIVATE_KEY
+# Then start the "RPG Deck → TestFlight" workflow by hand.
+#
+# The XP/VX/VX Ace runtime (mkxp-z) is compiled from source. Its output is cached between builds
+# and only rebuilt when ThirdParty/ changes, so the first build takes about an hour and later
+# ones about 10 minutes.
+
+workflows:
+  ios-testflight:
+    name: RPG Deck → TestFlight
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: Codemagic CI
+    environment:
+      groups:
+        - ios_signing   # CERTIFICATE_PRIVATE_KEY, shared with HiGuitar (Team → Environment variables)
+      vars:
+        XCODE_PROJECT: "RPG Maker.xcodeproj"
+        XCODE_SCHEME: "RPG Maker"
+        BUNDLE_ID: "com.solid.questplayer"
+        APP_STORE_APPLE_ID: 6817435851
+      xcode: latest
+    cache:
+      cache_paths:
+        - $HOME/mkxp-cache   # mkxp-z build output, see scripts/ci_build_mkxp.sh
+    scripts:
+      - name: Build the XP/VX/VX Ace runtime (mkxp-z), or reuse the cached build
+        script: MKXP_CACHE="$HOME/mkxp-cache" scripts/ci_build_mkxp.sh iphoneos
+      - name: Initialize keychain
+        script: keychain initialize
+      - name: Fetch (or create) the App Store distribution certificate & profile
+        script: |
+          #!/usr/bin/env bash
+          set -e
+          # The App ID already has iCloud (iCloud.com.solid.questplayer); the profile inherits it.
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+      - name: Install the fetched certificate into the build keychain
+        script: keychain add-certificates
+      - name: Set up code signing settings on the Xcode project
+        script: xcode-project use-profiles --project "$XCODE_PROJECT"
+      - name: Bump build number to the next available TestFlight build
+        script: |
+          #!/usr/bin/env bash
+          set -e
+          # The project has no agvtool versioning system, so set CURRENT_PROJECT_VERSION directly
+          # (only in this checkout; nothing is committed).
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" || echo 0)
+          LATEST=${LATEST:-0}
+          BUILD=$((LATEST + 1))
+          sed -i '' -E "s/CURRENT_PROJECT_VERSION = [0-9]+;/CURRENT_PROJECT_VERSION = $BUILD;/" "$XCODE_PROJECT/project.pbxproj"
+          echo "Build number $BUILD"
+      - name: Build .ipa for App Store distribution
+        script: |
+          #!/usr/bin/env bash
+          set -e
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
