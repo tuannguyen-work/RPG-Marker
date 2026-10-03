@@ -98,7 +98,10 @@
       SceneManager.updateMain = function () {
         if (!paused) {
           for (let i = 0; i < speed; i++) {
-            if (i > 0 && typeof this.updateInputData === "function") this.updateInputData();
+            if (i > 0 && typeof this.updateInputData === "function") {
+              inputTick++;
+              this.updateInputData();
+            }
             this.changeScene();
             this.updateScene();
           }
@@ -106,6 +109,24 @@
         this.renderScene();
         this.requestUpdate();
       };
+      // MV already reads input once per frame on iOS (SceneManager.update). Plugins that replace
+      // updateMain with their own loop (e.g. YEP_FpsSynchOption) read it again, which ages every
+      // press before the scene sees it, so Input.isTriggered never fires. Read it once per update.
+      let inputTick = 0;
+      let inputReadAt = -1;
+      const update = SceneManager.update;
+      SceneManager.update = function () {
+        inputTick++;
+        return update.apply(this, arguments);
+      };
+      const updateInputData = SceneManager.updateInputData;
+      if (typeof updateInputData === "function") {
+        SceneManager.updateInputData = function () {
+          if (inputReadAt === inputTick) return;
+          inputReadAt = inputTick;
+          updateInputData.apply(this, arguments);
+        };
+      }
     }
     if (window.WebAudio && typeof WebAudio.prototype._onXhrLoad === "function") {
       // MV: audio the app converted from Ogg to WAV carries its loop points in response headers.

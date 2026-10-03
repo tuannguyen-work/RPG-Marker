@@ -1,11 +1,11 @@
 RPG Deck is a player for role-playing games the user already owns. It does not include, sell or download any games, and it has no accounts or in-app purchases.
 
-To try it, please use the attached "RPG Deck Demo.zip", a short test game we made for this purpose (engine: the MIT-licensed RPG Maker MV corescript; graphics, sounds and data made by us and released as CC0; no RPG Maker RTP assets).
+To try it, please use the attached "GameDev The Beginning.zip": a free RPG Maker MV game by Ivan Yancharkin (https://yancharkin.itch.io/gamedev-the-beginning, source: https://github.com/yancharkin/game_jams). Its code is MIT-licensed and its assets CC BY-SA 4.0, so it may be redistributed; the license files and credits are inside the ZIP.
 
 1. Save the attached ZIP to the Files app on the test device (for example via AirDrop, or by opening the attachment on the device and choosing Save to Files).
 2. Open RPG Deck and tap + at the top right (or "Import Game" on the empty library), then choose the ZIP.
-3. When the import finishes, tap the game's card. It opens in landscape with on-screen buttons. Press A on "New Game".
-4. Walk with the direction pad, press A to talk to the old man, open the chest, or save at the golden crystal. The pause button is at the top left.
+3. When the import finishes, tap the game's card. It opens in landscape with on-screen buttons.
+4. On the title screen press A once to continue, then A again on "New Game". Walk with the direction pad and press A to interact. The pause button is at the top left.
 
 A ZIP can also be opened from Files or Safari with Share → RPG Deck. The in-app Guide (? button) shows these steps with illustrations.
 
