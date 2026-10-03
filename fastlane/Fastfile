@@ -3,6 +3,10 @@
 
 default_platform(:ios)
 
+# Metadata files are UTF-8 ("–", "•"); don't depend on the shell's locale.
+Encoding.default_external = Encoding::UTF_8
+Encoding.default_internal = Encoding::UTF_8
+
 PROJECT = "RPG Maker.xcodeproj"
 SCHEME = "RPG Maker"
 OUTPUT = "fastlane/build"

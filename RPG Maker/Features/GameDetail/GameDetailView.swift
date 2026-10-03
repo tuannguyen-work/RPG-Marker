@@ -162,7 +162,7 @@ struct GameDetailView: View {
             StatRow(label: "Last Played", value: game.lastPlayedAt.map { $0.formatted(.relative(presentation: .named)) } ?? String(localized: "Never"))
             StatRow(label: "Added", value: game.addedAt.formatted(date: .abbreviated, time: .omitted))
             StatRow(label: "Engine", value: game.engine.displayName)
-            StatRow(label: "Size", value: sizeOnDisk.map(DirectorySize.formatted) ?? "…")
+            StatRow(label: "Size", value: sizeOnDisk.map { $0 > 0 ? DirectorySize.formatted($0) : "—" } ?? "…")
         }
     }
 

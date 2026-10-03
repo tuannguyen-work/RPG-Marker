@@ -16,7 +16,7 @@ struct OnboardingView: View {
         Page(
             image: .onboardingImport,
             title: "Bring your own games",
-            message: "Import games you own straight from the Files app. Nothing is downloaded or included."
+            message: "Import games you own straight from the Files app, or start with the built-in demo."
         ),
         Page(
             image: .onboardingLibrary,

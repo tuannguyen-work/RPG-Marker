@@ -163,7 +163,7 @@ struct HomeView: View {
             // Launch with `-autoplay` (first playable game) or `-autoplay <part of a name>`.
             let arguments = ProcessInfo.processInfo.arguments
             isSettingsPresented = arguments.contains("-showSettings")
-            if arguments.contains("-showDetail") { detailGame = viewModel.projects.first }
+            if arguments.contains("-showDetail") { detailGame = viewModel.continueGame ?? viewModel.projects.first }
             if arguments.contains("-playDemo") { playDemo() }
             if let index = arguments.firstIndex(of: "-showGuide") {
                 showHelp(arguments.indices.contains(index + 1) ? GuideTopic(rawValue: arguments[index + 1]) : nil)
