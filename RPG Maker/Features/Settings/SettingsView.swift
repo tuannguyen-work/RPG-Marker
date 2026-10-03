@@ -262,6 +262,7 @@ struct Acknowledgement: Identifiable {
     static var all: [Acknowledgement] {
         let base = [
             Acknowledgement(name: "stb_vorbis", license: "MIT", licenseResource: "License-stb_vorbis"),
+            Acknowledgement(name: "Pixelify Sans (font)", license: "SIL OFL 1.1", licenseResource: "License-PixelifySans"),
         ]
         return MKXPIsAvailable() ? base + rgssRuntime : base
     }

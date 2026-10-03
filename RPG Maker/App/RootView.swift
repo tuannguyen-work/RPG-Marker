@@ -10,6 +10,7 @@ import SwiftUI
 struct RootView: View {
     @Environment(AppDependencies.self) private var dependencies
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @State private var showsSplash = true
 
     var body: some View {
         NavigationStack {
@@ -20,8 +21,14 @@ struct RootView: View {
         }
         .tint(Theme.Colors.ember)
         .preferredColorScheme(.dark)
+        .overlay {
+            if showsSplash {
+                SplashView { showsSplash = false }
+            }
+        }
+        // The introduction waits for the splash, so it doesn't cover it.
         .fullScreenCover(isPresented: Binding(
-            get: { !hasCompletedOnboarding },
+            get: { !hasCompletedOnboarding && !showsSplash },
             set: { hasCompletedOnboarding = !$0 }
         )) {
             OnboardingView { hasCompletedOnboarding = true }

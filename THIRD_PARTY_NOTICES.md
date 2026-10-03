@@ -34,3 +34,9 @@ license text in `Resources/Licenses/`.
 - Anything else (custom, "non-commercial", unknown): not allowed until reviewed.
 - Build mkxp-z with `enable-https` / OpenSSL **disabled**.
 - Never bundle RPG Maker RTP files, fonts, or games owned by others.
+
+## Pixelify Sans (`RPG Maker/Resources/Fonts/PixelifySans.ttf`)
+
+Copyright 2021 The Pixelify Sans Project Authors (https://github.com/eifetx/Pixelify-Sans).
+SIL Open Font License 1.1; full text in `RPG Maker/Resources/Licenses/License-PixelifySans.txt`.
+Used for the splash screen wordmark.

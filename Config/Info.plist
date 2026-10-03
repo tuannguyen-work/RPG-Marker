@@ -20,6 +20,21 @@
 			</array>
 		</dict>
 	</array>
+	<!-- Static launch screen: the first frame of SplashView (same color, logo size and position). -->
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchBackground</string>
+		<key>UIImageName</key>
+		<string>LaunchLogo</string>
+		<key>UIImageRespectsSafeAreaInsets</key>
+		<false/>
+	</dict>
+	<!-- Pixel font for the splash wordmark (SIL OFL, Resources/Licenses/License-PixelifySans.txt). -->
+	<key>UIAppFonts</key>
+	<array>
+		<string>PixelifySans.ttf</string>
+	</array>
 	<!-- Read shared files where they are instead of receiving a copy: games can be hundreds of MB. -->
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
