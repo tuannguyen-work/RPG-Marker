@@ -128,9 +128,6 @@ struct SettingsView: View {
                     Link(destination: AppInfo.privacyPolicyURL) {
                         Label("Privacy Policy", systemImage: "hand.raised")
                     }
-                    Link(destination: AppInfo.sourceCodeURL) {
-                        Label("Source Code", systemImage: "chevron.left.forwardslash.chevron.right")
-                    }
                     NavigationLink("GNU General Public License v3") {
                         LicenseTextView(title: "GPL-3.0", resource: "License-GPL-3.0")
                     }
@@ -140,7 +137,8 @@ struct SettingsView: View {
                 } header: {
                     Text("Open Source")
                 } footer: {
-                    Text("This app is free software: you can redistribute and modify it under the GPL, version 3 or later. The app's name, icon and artwork are not covered by the GPL.")
+                    // GPL source offer: plain directions rather than a link (the App Store page links to it).
+                    Text("This app is free software: you can redistribute and modify it under the GPL, version 3 or later. Its complete source code is available from the developer website listed on its App Store page. The app's name, icon and artwork are not covered by the GPL.")
                 }
 
                 Section("Acknowledgements") {
@@ -305,7 +303,6 @@ enum AppInfo {
     }
 
     /// GPL source code offer: must point at the source of this exact release.
-    static let sourceCodeURL = URL(string: "https://github.com/tuannguyen-work/RPG-Marker")!
     static let supportURL = URL(string: "https://github.com/tuannguyen-work/RPG-Marker/issues")!
     static let privacyPolicyURL = URL(string: "https://github.com/tuannguyen-work/RPG-Marker/blob/main/PRIVACY.md")!
 }
