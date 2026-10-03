@@ -35,6 +35,8 @@ CC := $(shell xcrun --sdk $(PLATFORM) --find clang)
 CXX := $(shell xcrun --sdk $(PLATFORM) --find clang++)
 PKG_CONFIG_LIBDIR := $(BUILD_PREFIX)/lib/pkgconfig
 CLONE := git clone -q --depth 1
+# Moves a branch checkout to the exact commit the released app was built from (see ../SOURCES.md).
+PIN = git -C $@ fetch -q --depth 1 origin $(1) && git -C $@ checkout -q FETCH_HEAD
 GITHUB := https://github.com
 
 # Autotools: a host triple that differs from the build machine puts configure in
@@ -113,6 +115,7 @@ $(LIBDIR)/libfreetype.a: | $(DOWNLOADS)/freetype
 	cd $(DOWNLOADS)/freetype && mkdir -p cmakebuild && cd cmakebuild && $(CMAKE) -DFT_DISABLE_HARFBUZZ=ON -DFT_DISABLE_BROTLI=ON -DFT_DISABLE_BZIP2=ON -DFT_DISABLE_PNG=ON && make -j$(NPROC) install
 $(DOWNLOADS)/freetype:
 	$(CLONE) $(GITHUB)/mkxp-z/freetype2 $@
+	$(call PIN,4d8db130ea4342317581bab65fc96365ce806b77)
 
 # ---- SDL
 sdl2: init_dirs $(LIBDIR)/libSDL2.a
@@ -120,6 +123,7 @@ $(LIBDIR)/libSDL2.a: | $(DOWNLOADS)/sdl2
 	cd $(DOWNLOADS)/sdl2 && mkdir -p cmakebuild && cd cmakebuild && $(CMAKE) -DSDL_SHARED=OFF -DSDL_STATIC=ON -DSDL_TEST=OFF && make -j$(NPROC) install
 $(DOWNLOADS)/sdl2:
 	$(CLONE) $(GITHUB)/mkxp-z/SDL -b mkxp-z-2.28.1 $@
+	$(call PIN,d3ac4c3742a405e719071fc4f5a7ba8a125c76a1)
 	# Create SDL's UIWindow in the app's window scene, or SwiftUI apps never show it.
 	git -C $@ apply "$(CURDIR)/patches/sdl2-ios-window-scene.patch"
 
@@ -130,7 +134,9 @@ $(LIBDIR)/libSDL2_image.a: | $(DOWNLOADS)/sdl2_image
 		-DSDL2IMAGE_JPG_SAVE=ON -DSDL2IMAGE_PNG_SAVE=ON -DSDL2IMAGE_JXL=OFF -DSDL2IMAGE_AVIF=OFF -DSDL2IMAGE_WEBP=OFF \
 		-DSDL2IMAGE_TIF=OFF -DSDL2IMAGE_BACKEND_IMAGEIO=OFF && make -j$(NPROC) install
 $(DOWNLOADS)/sdl2_image:
-	$(CLONE) $(GITHUB)/mkxp-z/SDL_image -b mkxp-z $@ && cd $@ && ./external/download.sh
+	$(CLONE) $(GITHUB)/mkxp-z/SDL_image -b mkxp-z $@
+	$(call PIN,d3c6d5963dbe438bcae0e2b6f3d7cfea23d02829)
+	cd $@ && ./external/download.sh
 
 sdlsound: init_dirs sdl2 libogg libvorbis $(LIBDIR)/libSDL2_sound.a
 $(LIBDIR)/libSDL2_sound.a: | $(DOWNLOADS)/sdl_sound
@@ -138,6 +144,7 @@ $(LIBDIR)/libSDL2_sound.a: | $(DOWNLOADS)/sdl_sound
 		-DSDLSOUND_BUILD_SHARED=OFF -DSDLSOUND_BUILD_TEST=OFF -DSDLSOUND_DECODER_COREAUDIO=OFF && make -j$(NPROC) install
 $(DOWNLOADS)/sdl_sound:
 	$(CLONE) $(GITHUB)/mkxp-z/SDL_sound -b git $@
+	$(call PIN,cfb2533eb3bac3700015cbd87cc623bea1467239)
 
 sdl2ttf: init_dirs sdl2 freetype $(LIBDIR)/libSDL2_ttf.a
 $(LIBDIR)/libSDL2_ttf.a: | $(DOWNLOADS)/sdl2_ttf
@@ -145,6 +152,7 @@ $(LIBDIR)/libSDL2_ttf.a: | $(DOWNLOADS)/sdl2_ttf
 		-DSDL2TTF_SAMPLES=OFF -DSDL2TTF_VENDORED=OFF -DSDL2TTF_HARFBUZZ=OFF && make -j$(NPROC) install
 $(DOWNLOADS)/sdl2_ttf:
 	$(CLONE) $(GITHUB)/mkxp-z/SDL_ttf -b mkxp-z $@
+	$(call PIN,0d5909ee2f1c95770d7fe76eb2fbd66ece26a5bf)
 
 # ---- Audio output
 openal: init_dirs $(LIBDIR)/libopenal.a
@@ -188,6 +196,7 @@ $(LIBDIR)/libruby-static.a: | $(DOWNLOADS)/ruby
 	# ↑ One archive with the interpreter, its statically linked extensions and encodings.
 $(DOWNLOADS)/ruby:
 	$(CLONE) $(GITHUB)/mkxp-z/ruby -b mkxp-z-3.1.3 $@
+	$(call PIN,4d85560cf65938d7883a323bf553acad1faf5eae)
 	# iOS fixes: skip the macOS-only version check, no sys/vnode.h, no -bundle_loader, no bundled gems.
 	git -C $@ apply "$(CURDIR)/patches/ruby-3.1-ios.patch"
 

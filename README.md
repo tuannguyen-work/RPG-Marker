@@ -3,13 +3,17 @@
 RPG Deck is an iOS player for games made with RPG Maker. Import a game you own from
 the Files app and play it with on-screen controls.
 
-> This app does not include, sell, host or distribute any games. All games must
-> be legally obtained by the user. RPG Maker is a trademark of its respective
+> Apart from its built-in demo, this app does not include, sell, host or distribute
+> any games. All games must be legally obtained by the user. RPG Maker is a trademark of its respective
 > owner; this project is not affiliated with or endorsed by it.
 
-## Status
+## Features
 
-Early development. RPG Maker MV/MZ run in a web runtime; XP/VX/VX Ace in mkxp-z.
+- Plays RPG Maker MV and MZ games (WKWebView) and XP, VX and VX Ace games (mkxp-z)
+- Library with covers, search, filters, favorites and play time
+- On-screen controls with adjustable size and opacity, pause menu, fast-forward
+- Saves kept apart from games, synced with iCloud Drive, exportable as ZIP
+- Illustrated in-app guide and a built-in demo game
 
 ## Building
 
@@ -34,13 +38,30 @@ Then open `RPG Maker.xcodeproj`, pick the `RPG Maker` scheme and a destination, 
 ## Project structure
 
 ```
-RPG Maker/
-├── App/            entry point, dependency container, navigation
-├── Core/           cross-cutting utilities (logging, …)
-├── Domain/         models and service protocols
-├── Features/       one folder per feature (View + ViewModel)
-├── DesignSystem/   theme tokens and shared components
-└── Resources/      asset catalog
+RPG Maker/            the app (the Xcode target keeps its original name)
+├── App/              entry point, dependency container, navigation
+├── Core/             logging, preferences, storage layout
+├── Domain/           models and the library repository
+├── Import/           ZIP/folder import, engine detection, covers
+├── Runtime/          web runtime (MV/MZ), mkxp-z bridge (XP/VX/VX Ace), saves, iCloud
+├── Features/         one folder per screen (library, details, player, guide, settings, …)
+├── DesignSystem/     theme tokens and shared components
+└── Resources/        asset catalog, licenses, privacy manifest, demo game
+ThirdParty/           build scripts and patches for mkxp-z and its dependencies (SOURCES.md)
+DemoGame/             generator for the bundled demo game
+fastlane/             App Store metadata, screenshots and release lanes
+```
+
+## Releasing
+
+`fastlane/README.md` lists the lanes. In short, with an App Store Connect API key in
+`fastlane/.env` (see `fastlane/.env.example`):
+
+```sh
+fastlane screenshots   # 6.9" screenshots from the simulator
+fastlane metadata      # App Store text
+fastlane beta          # build and upload to TestFlight
+fastlane release       # submit the latest build for review
 ```
 
 ## License
@@ -56,7 +77,12 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See `LICENSE` for details.
 
-Third-party components are listed in `THIRD_PARTY_NOTICES.md`.
+Third-party components are listed in `THIRD_PARTY_NOTICES.md`; the exact revisions built into
+the app are in `ThirdParty/SOURCES.md`.
+
+The app's name, icon and artwork (the images in `RPG Maker/Resources/Assets.xcassets`) are not
+covered by the GPL and may not be reused in other apps. The demo game's files are covered by
+`DemoGame/LICENSES.txt`.
 
 The app's name, icon and branding are not licensed under the GPL and may not be
 used for derived apps without permission.
