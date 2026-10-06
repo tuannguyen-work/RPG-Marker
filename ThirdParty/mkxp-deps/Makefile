@@ -191,9 +191,12 @@ $(LIBDIR)/libruby-static.a: | $(DOWNLOADS)/ruby
 		--disable-rubygems --disable-install-doc --disable-jit-support --disable-dtrace \
 		--with-baseruby=$(BASERUBY) --with-out-ext=$(RUBY_EXCLUDED_EXTS) && \
 	make -j$(NPROC) && make install-nodoc && \
+	mkdir -p $(INCLUDEDIR)/ruby-3.1.0 && cp -R include/ .ext/include/ $(INCLUDEDIR)/ruby-3.1.0/ && \
 	xcrun libtool -static -no_warning_for_no_symbols -o $@ $(LIBDIR)/libruby.3.1-static.a \
 		ext/extinit.o enc/libenc.a enc/libtrans.a $$(find ext -name '*.a')
-	# ↑ One archive with the interpreter, its statically linked extensions and encodings.
+	# ↑ Headers are copied from the source tree as well: a newer BASERUBY (Ruby 4 on CI) makes
+	#   rbinstall put them under the SDK path. Then one archive with the interpreter, its
+	#   statically linked extensions and encodings.
 $(DOWNLOADS)/ruby:
 	$(CLONE) $(GITHUB)/mkxp-z/ruby -b mkxp-z-3.1.3 $@
 	$(call PIN,4d85560cf65938d7883a323bf553acad1faf5eae)

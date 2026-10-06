@@ -11,7 +11,9 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 fingerprint() {
-    (cd "$ROOT/ThirdParty" && git ls-files mkxp-deps mkxp-ios SOURCES.md | sort | xargs shasum -a 256 | shasum -a 256 | cut -d' ' -f1)
+    # git ls-files lists in byte order and shasum prints relative paths, so the result is the same on
+    # every machine (no locale-dependent sort).
+    (cd "$ROOT/ThirdParty" && LC_ALL=C git ls-files mkxp-deps mkxp-ios SOURCES.md | LC_ALL=C xargs shasum -a 256 | shasum -a 256 | cut -d' ' -f1)
 }
 if [ "${1:-}" = "--inputs" ]; then fingerprint; exit 0; fi
 
@@ -21,6 +23,7 @@ ASSETS="$ROOT/RPG Maker/Runtime/MKXP/Assets.bundle"
 CACHE="${MKXP_CACHE:-}"
 
 INPUTS=$(fingerprint)
+echo "ThirdParty fingerprint: $INPUTS"
 
 is_current() {  # <folder with libmkxpz-all.a, Assets.bundle and .inputs>
     [ -f "$1/libmkxpz-all.a" ] && [ -d "$1/Assets.bundle/Shaders" ] && [ "$(cat "$1/.inputs" 2>/dev/null)" = "$INPUTS" ]
