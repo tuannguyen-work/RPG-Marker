@@ -100,6 +100,9 @@ static int runGame(const char *gameRoot) {
     // MIDI soundfont for games that don't name one (built into Assets.bundle by build.sh).
     NSString *soundFont = [NSBundle.mainBundle pathForResource:@"GeneralUser-GS" ofType:@"sf2" inDirectory:@"Assets.bundle"];
     if (soundFont) setenv("MKXPZ_SOUNDFONT", soundFont.fileSystemRepresentation, 1);
+    // No Bluetooth: SDL's HIDAPI joystick driver scans for Bluetooth LE controllers with CoreBluetooth,
+    // which asks for Bluetooth permission. Controllers aren't supported yet; touch controls are used.
+    setenv("SDL_JOYSTICK_HIDAPI", "0", 1);
     static char name[] = "mkxp-z";
     char *argv[] = { name, NULL };
 

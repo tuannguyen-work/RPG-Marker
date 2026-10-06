@@ -20,6 +20,10 @@
 			</array>
 		</dict>
 	</array>
+	<!-- Required because the bundled SDL library references CoreBluetooth (game controllers). The app
+	     turns that driver off (MKXPBridge), so the permission is never actually requested. -->
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>RPG Deck uses Bluetooth only to connect game controllers you choose to pair for playing games.</string>
 	<!-- Static launch screen: the first frame of SplashView (same color, logo size and position). -->
 	<key>UILaunchScreen</key>
 	<dict>
